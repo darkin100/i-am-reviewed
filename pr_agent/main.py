@@ -4,9 +4,9 @@ import os
 import sys
 import subprocess
 from dotenv import load_dotenv
+from google import genai
 
 from pr_agent.github_tools import get_pr_info, get_pr_diff, post_pr_comment
-from pr_agent.reviewer import create_review_agent
 
 
 def main():
@@ -59,11 +59,45 @@ Changes:
 
 Provide your code review."""
 
-        # Get agent review
-        print("Generating review with AI agent...")
-        agent = create_review_agent()
-        response = agent.generate(prompt)
+        # Get agent review using genai client directly
+        print("Generating review with AI...")
+        client = genai.Client(
+            vertexai=True,
+            project=os.getenv('GOOGLE_CLOUD_PROJECT'),
+            location=os.getenv('GOOGLE_CLOUD_LOCATION')
+        )
+
+        system_instruction = """You are a code reviewer analyzing a pull request.
+
+Review the PR for:
+- Obvious bugs or logic errors
+- Code quality issues (complexity, readability)
+- Potential security issues
+- Missing error handling
+- Best practice violations
+
+Provide a concise review summary with:
+1. Overall assessment (Looks good / Needs work / Has issues)
+2. Key findings (list 3-5 most important issues)
+3. Positive observations (what's done well)
+
+Keep feedback constructive and actionable.
+Format your response in markdown for GitHub."""
+
+        response = client.models.generate_content(
+            model='gemini-2.5-flash',
+            contents=prompt,
+            config=genai.types.GenerateContentConfig(
+                system_instruction=system_instruction,
+                temperature=0.7
+            )
+        )
+
         review_text = response.text
+
+        if not review_text:
+            print("Error: No response from model")
+            sys.exit(1)
 
         # Post review comment
         print("Posting review comment to PR...")
