@@ -6,6 +6,8 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 This is a PR Review Agent built using **Google ADK** (Agent Development Kit). The project uses Google's Gemini models via Vertex AI for agent-based interactions.
 
+Documentation for Google ADK is https://google.github.io/adk-docs/
+
 ## Environment Setup
 
 The project uses a Python virtual environment located at `venv/`.
