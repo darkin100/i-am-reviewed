@@ -16,6 +16,6 @@ runs:
   using: 'composite'
   steps:
     - name: Checkout code
-      uses: actions/checkout@v4
+      uses: actions/checkout@v5
     - run: echo "Custom action is running ${{ github.ref }} and your repository is ${{ github.repository }}."
       shell: bash
