@@ -20,5 +20,6 @@ runs:
     - run: echo "Custom action is running ${{ github.ref }} and your repository is ${{ github.repository }}."
       shell: bash
     - run: |
+        echo "Running Python"
         python pr_agent/hello.py
       shell: bash
