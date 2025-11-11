@@ -1,0 +1,7 @@
+# Google ADK and dependencies (already installed)
+google-adk==1.17.0
+google-genai==1.47.0
+google-cloud-aiplatform==1.123.0
+
+# Environment management
+python-dotenv==1.0.0

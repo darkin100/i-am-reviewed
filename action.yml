@@ -1,0 +1,71 @@
+name: 'AI PR Reviewer'
+description: 'Automated PR reviews using Google Gemini 2.5 Flash via Vertex AI'
+author: 'Your Name'
+
+branding:
+  icon: 'check-circle'
+  color: 'blue'
+
+inputs:
+  google-cloud-project:
+    description: 'Google Cloud Project ID for Vertex AI'
+    required: true
+  google-cloud-location:
+    description: 'Google Cloud location (e.g., europe-west2)'
+    required: true
+    default: 'europe-west2'
+  workload-identity-provider:
+    description: 'Workload Identity Provider for authentication (format: projects/PROJECT_NUMBER/locations/global/workloadIdentityPools/POOL_ID/providers/PROVIDER_ID)'
+    required: true
+  service-account:
+    description: 'Service Account email for Workload Identity Federation'
+    required: true
+  github-token:
+    description: 'GitHub token for posting comments (use secrets.GITHUB_TOKEN)'
+    required: true
+    default: ${{ github.token }}
+
+runs:
+  using: 'composite'
+  steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Authenticate to Google Cloud
+      uses: google-github-actions/auth@v2
+      with:
+        workload_identity_provider: ${{ inputs.workload-identity-provider }}
+        service_account: ${{ inputs.service-account }}
+
+    - name: Set up Cloud SDK
+      uses: google-github-actions/setup-gcloud@v2
+
+    - name: Build Docker image
+      shell: bash
+      run: |
+        docker build -t pr-review-agent:latest .
+
+    - name: Run PR Review Agent
+      shell: bash
+      env:
+        GITHUB_REPOSITORY: ${{ github.repository }}
+        GOOGLE_CLOUD_PROJECT: ${{ inputs.google-cloud-project }}
+        GOOGLE_CLOUD_LOCATION: ${{ inputs.google-cloud-location }}
+        GITHUB_TOKEN: ${{ inputs.github-token }}
+        GITHUB_ACTIONS: 'true'
+        GITHUB_EVENT_PATH: ${{ github.event_path }}
+      run: |
+        # Configure GitHub CLI with token
+        echo "${{ inputs.github-token }}" | gh auth login --with-token
+
+        # Run the Docker container with necessary environment variables
+        docker run --rm \
+          -e GITHUB_REPOSITORY \
+          -e GOOGLE_CLOUD_PROJECT \
+          -e GOOGLE_CLOUD_LOCATION \
+          -e GITHUB_ACTIONS \
+          -e GITHUB_EVENT_PATH=/github/event.json \
+          -v ${{ github.event_path }}:/github/event.json:ro \
+          -v ~/.config/gcloud:/root/.config/gcloud:ro \
+          -v ~/.config/gh:/root/.config/gh:ro \
+          pr-review-agent:latest
