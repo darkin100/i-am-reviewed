@@ -17,9 +17,13 @@ runs:
   steps:
     - name: Checkout code
       uses: actions/checkout@v5
-    - run: echo "Custom action is running ${{ github.ref }} and your repository is ${{ github.repository }}."
+    
+    - name: Let us know you are here
+      run: echo "Custom action is running ${{ github.ref }} and your repository is ${{ github.repository }}."
       shell: bash
-    - run: |
+    
+    - name: Run Python Script
+      run: |
         echo "Running Python"
         python pr_agent/hello.py
       shell: bash
