@@ -13,17 +13,5 @@ inputs:
     default: ${{ github.token }}
 
 runs:
-  using: 'composite'
-  steps:
-    - name: Checkout code
-      uses: actions/checkout@v5
-    
-    - name: Let us know you are here
-      run: echo "Custom action is running ${{ github.ref }} and your repository is ${{ github.repository }}."
-      shell: bash
-    
-    - name: Run Python Script
-      run: |
-        echo "Running Python"
-        python pr_agent/hello.py
-      shell: bash
+  using: 'docker'
+  image: 'europe-west2-docker.pkg.dev/iamreleased/docker-images/pr-review-agent:latest'
