@@ -18,3 +18,4 @@ runs:
     - name: Checkout code
       uses: actions/checkout@v4
     - run: echo "Custom action is running ${{ github.ref }} and your repository is ${{ github.repository }}."
+      shell: bash
