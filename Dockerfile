@@ -42,4 +42,4 @@ ENV PYTHONUNBUFFERED=1
 ENV PYTHONPATH=/app
 
 # Entry point
-ENTRYPOINT ["python", "-m", "pr_agent.main"]
+ENTRYPOINT ["python", "-m", "pr_agent.hello"]

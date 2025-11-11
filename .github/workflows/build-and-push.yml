@@ -1,0 +1,65 @@
+name: Build and Push Docker Image
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:  # Allow manual trigger
+
+# Required for Workload Identity Federation
+permissions:
+  id-token: write
+  contents: read
+
+jobs:
+  build-and-push:
+    name: Build and Push to Artifact Registry
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Authenticate to Google Cloud
+        uses: google-github-actions/auth@v2
+        with:
+          workload_identity_provider: ${{ secrets.WORKLOAD_IDENTITY_PROVIDER }}
+          service_account: ${{ secrets.SERVICE_ACCOUNT }}
+
+      - name: Set up Cloud SDK
+        uses: google-github-actions/setup-gcloud@v2
+
+      - name: Configure Docker for Artifact Registry
+        run: |
+          gcloud auth configure-docker europe-west2-docker.pkg.dev
+
+      - name: Set image tags
+        id: tags
+        run: |
+          REGISTRY="europe-west2-docker.pkg.dev/iamreleased/docker-images"
+          IMAGE_NAME="pr-review-agent"
+          SHORT_SHA=$(echo ${{ github.sha }} | cut -c1-7)
+
+          echo "image_base=${REGISTRY}/${IMAGE_NAME}" >> $GITHUB_OUTPUT
+          echo "tag_latest=${REGISTRY}/${IMAGE_NAME}:latest" >> $GITHUB_OUTPUT
+          echo "tag_sha=${REGISTRY}/${IMAGE_NAME}:${SHORT_SHA}" >> $GITHUB_OUTPUT
+          echo "tag_full_sha=${REGISTRY}/${IMAGE_NAME}:${{ github.sha }}" >> $GITHUB_OUTPUT
+
+      - name: Build Docker image
+        run: |
+          docker build -t ${{ steps.tags.outputs.tag_latest }} \
+                       -t ${{ steps.tags.outputs.tag_sha }} \
+                       -t ${{ steps.tags.outputs.tag_full_sha }} .
+
+      - name: Push Docker image
+        run: |
+          docker push ${{ steps.tags.outputs.tag_latest }}
+          docker push ${{ steps.tags.outputs.tag_sha }}
+          docker push ${{ steps.tags.outputs.tag_full_sha }}
+
+      - name: Output image details
+        run: |
+          echo "Image pushed successfully!"
+          echo "Latest: ${{ steps.tags.outputs.tag_latest }}"
+          echo "SHA: ${{ steps.tags.outputs.tag_sha }}"
+          echo "Full SHA: ${{ steps.tags.outputs.tag_full_sha }}"
