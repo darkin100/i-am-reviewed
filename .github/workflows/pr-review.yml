@@ -19,36 +19,36 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Authenticate to Google Cloud
-        uses: google-github-actions/auth@v2
-        with:
-          workload_identity_provider: ${{ secrets.WORKLOAD_IDENTITY_PROVIDER }}
-          service_account: ${{ secrets.SERVICE_ACCOUNT }}
+      # - name: Authenticate to Google Cloud
+      #   uses: google-github-actions/auth@v2
+      #   with:
+      #     workload_identity_provider: ${{ secrets.WORKLOAD_IDENTITY_PROVIDER }}
+      #     service_account: ${{ secrets.SERVICE_ACCOUNT }}
 
-      - name: Set up Cloud SDK
-        uses: google-github-actions/setup-gcloud@v2
+      # - name: Set up Cloud SDK
+      #   uses: google-github-actions/setup-gcloud@v2
 
-      - name: Build Docker image
-        run: docker build -t pr-review-agent:latest .
+      # - name: Build Docker image
+      #   run: docker build -t pr-review-agent:latest .
 
-      - name: Authenticate GitHub CLI
-        run: echo "${{ secrets.GITHUB_TOKEN }}" | gh auth login --with-token
+      # - name: Authenticate GitHub CLI
+      #   run: echo "${{ secrets.GITHUB_TOKEN }}" | gh auth login --with-token
 
-      - name: Run PR Review Agent
-        env:
-          GITHUB_REPOSITORY: ${{ github.repository }}
-          GOOGLE_CLOUD_PROJECT: ${{ secrets.GOOGLE_CLOUD_PROJECT }}
-          GOOGLE_CLOUD_LOCATION: ${{ secrets.GOOGLE_CLOUD_LOCATION }}
-          GITHUB_ACTIONS: 'true'
-          GITHUB_EVENT_PATH: ${{ github.event_path }}
-        run: |
-          docker run --rm \
-            -e GITHUB_REPOSITORY \
-            -e GOOGLE_CLOUD_PROJECT \
-            -e GOOGLE_CLOUD_LOCATION \
-            -e GITHUB_ACTIONS \
-            -e GITHUB_EVENT_PATH=/github/event.json \
-            -v ${{ github.event_path }}:/github/event.json:ro \
-            -v $HOME/.config/gcloud:/root/.config/gcloud:ro \
-            -v $HOME/.config/gh:/root/.config/gh:ro \
-            pr-review-agent:latest
+      # - name: Run PR Review Agent
+      #   env:
+      #     GITHUB_REPOSITORY: ${{ github.repository }}
+      #     GOOGLE_CLOUD_PROJECT: ${{ secrets.GOOGLE_CLOUD_PROJECT }}
+      #     GOOGLE_CLOUD_LOCATION: ${{ secrets.GOOGLE_CLOUD_LOCATION }}
+      #     GITHUB_ACTIONS: 'true'
+      #     GITHUB_EVENT_PATH: ${{ github.event_path }}
+      #   run: |
+      #     docker run --rm \
+      #       -e GITHUB_REPOSITORY \
+      #       -e GOOGLE_CLOUD_PROJECT \
+      #       -e GOOGLE_CLOUD_LOCATION \
+      #       -e GITHUB_ACTIONS \
+      #       -e GITHUB_EVENT_PATH=/github/event.json \
+      #       -v ${{ github.event_path }}:/github/event.json:ro \
+      #       -v $HOME/.config/gcloud:/root/.config/gcloud:ro \
+      #       -v $HOME/.config/gh:/root/.config/gh:ro \
+      #       pr-review-agent:latest
