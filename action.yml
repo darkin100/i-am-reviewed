@@ -10,7 +10,12 @@ inputs:
   github-token:
     description: 'GitHub token for posting comments (use secrets.GITHUB_TOKEN)'
     required: true
-    default: ${{ github.token }}
+  repository:
+    description: 'GitHub repository (owner/repo)'
+    required: false
+  pr-number:
+    description: 'Pull request number'
+    required: false
   google-cloud-project:
     description: 'Google Cloud Project ID for Vertex AI'
     required: true
@@ -24,9 +29,8 @@ runs:
   image: 'docker://europe-west2-docker.pkg.dev/iamreleased/docker-images/pr-review-agent-github:latest'
   env:
     GH_TOKEN: ${{ inputs.github-token }}
-    GITHUB_REPOSITORY: ${{ github.repository }}
-    GITHUB_PR_NUMBER: ${{ github.event.pull_request.number }}
+    GITHUB_REPOSITORY: ${{ inputs.repository }}
+    GITHUB_PR_NUMBER: ${{ inputs.pr-number }}
     GITHUB_ACTIONS: 'true'
-    GITHUB_EVENT_PATH: ${{ github.event_path }}
     GOOGLE_CLOUD_PROJECT: ${{ inputs.google-cloud-project }}
     GOOGLE_CLOUD_LOCATION: ${{ inputs.google-cloud-location }}
