@@ -11,7 +11,21 @@ inputs:
     description: 'GitHub token for posting comments (use secrets.GITHUB_TOKEN)'
     required: true
     default: ${{ github.token }}
+  google-cloud-project:
+    description: 'Google Cloud Project ID for Vertex AI'
+    required: true
+  google-cloud-location:
+    description: 'Google Cloud location/region (e.g., europe-west2)'
+    required: true
+    default: 'europe-west2'
 
 runs:
   using: 'docker'
-  image: 'docker://europe-west2-docker.pkg.dev/iamreleased/docker-images/pr-review-agent:latest'
+  image: 'docker://europe-west2-docker.pkg.dev/iamreleased/docker-images/pr-review-agent-github:latest'
+  env:
+    GH_TOKEN: ${{ inputs.github-token }}
+    GITHUB_REPOSITORY: ${{ github.repository }}
+    GITHUB_ACTIONS: 'true'
+    GITHUB_EVENT_PATH: ${{ github.event_path }}
+    GOOGLE_CLOUD_PROJECT: ${{ inputs.google-cloud-project }}
+    GOOGLE_CLOUD_LOCATION: ${{ inputs.google-cloud-location }}

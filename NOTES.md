@@ -4,8 +4,6 @@ I have the cust action being pulled down and running from the test repo
 
 The entry to the Github action is the `action.yml` file.
 
-Next steps are to change the composite action into a docker based action, this means I need a hosting repo and access to it. 
-
 We want the docker image to be very relaxed as to what it recieves, e.g all scenarios. And then the Agent will orchestrate what needs to be done.
 
 

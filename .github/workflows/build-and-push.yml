@@ -37,29 +37,54 @@ jobs:
         id: tags
         run: |
           REGISTRY="europe-west2-docker.pkg.dev/iamreleased/docker-images"
-          IMAGE_NAME="pr-review-agent"
           SHORT_SHA=$(echo ${{ github.sha }} | cut -c1-7)
 
-          echo "image_base=${REGISTRY}/${IMAGE_NAME}" >> $GITHUB_OUTPUT
-          echo "tag_latest=${REGISTRY}/${IMAGE_NAME}:latest" >> $GITHUB_OUTPUT
-          echo "tag_sha=${REGISTRY}/${IMAGE_NAME}:${SHORT_SHA}" >> $GITHUB_OUTPUT
-          echo "tag_full_sha=${REGISTRY}/${IMAGE_NAME}:${{ github.sha }}" >> $GITHUB_OUTPUT
+          # GitHub image tags
+          echo "github_tag_latest=${REGISTRY}/pr-review-agent-github:latest" >> $GITHUB_OUTPUT
+          echo "github_tag_sha=${REGISTRY}/pr-review-agent-github:${SHORT_SHA}" >> $GITHUB_OUTPUT
+          echo "github_tag_full_sha=${REGISTRY}/pr-review-agent-github:${{ github.sha }}" >> $GITHUB_OUTPUT
 
-      - name: Build Docker image
-        run: |
-          docker build -t ${{ steps.tags.outputs.tag_latest }} \
-                       -t ${{ steps.tags.outputs.tag_sha }} \
-                       -t ${{ steps.tags.outputs.tag_full_sha }} .
+          # GitLab image tags
+          echo "gitlab_tag_latest=${REGISTRY}/pr-review-agent-gitlab:latest" >> $GITHUB_OUTPUT
+          echo "gitlab_tag_sha=${REGISTRY}/pr-review-agent-gitlab:${SHORT_SHA}" >> $GITHUB_OUTPUT
+          echo "gitlab_tag_full_sha=${REGISTRY}/pr-review-agent-gitlab:${{ github.sha }}" >> $GITHUB_OUTPUT
 
-      - name: Push Docker image
+      - name: Build GitHub Docker image
         run: |
-          docker push ${{ steps.tags.outputs.tag_latest }}
-          docker push ${{ steps.tags.outputs.tag_sha }}
-          docker push ${{ steps.tags.outputs.tag_full_sha }}
+          docker build -f Dockerfile.Github \
+                       -t ${{ steps.tags.outputs.github_tag_latest }} \
+                       -t ${{ steps.tags.outputs.github_tag_sha }} \
+                       -t ${{ steps.tags.outputs.github_tag_full_sha }} .
+
+      - name: Build GitLab Docker image
+        run: |
+          docker build -f Dockerfile.Gitlab \
+                       -t ${{ steps.tags.outputs.gitlab_tag_latest }} \
+                       -t ${{ steps.tags.outputs.gitlab_tag_sha }} \
+                       -t ${{ steps.tags.outputs.gitlab_tag_full_sha }} .
+
+      - name: Push GitHub Docker image
+        run: |
+          docker push ${{ steps.tags.outputs.github_tag_latest }}
+          docker push ${{ steps.tags.outputs.github_tag_sha }}
+          docker push ${{ steps.tags.outputs.github_tag_full_sha }}
+
+      - name: Push GitLab Docker image
+        run: |
+          docker push ${{ steps.tags.outputs.gitlab_tag_latest }}
+          docker push ${{ steps.tags.outputs.gitlab_tag_sha }}
+          docker push ${{ steps.tags.outputs.gitlab_tag_full_sha }}
 
       - name: Output image details
         run: |
-          echo "Image pushed successfully!"
-          echo "Latest: ${{ steps.tags.outputs.tag_latest }}"
-          echo "SHA: ${{ steps.tags.outputs.tag_sha }}"
-          echo "Full SHA: ${{ steps.tags.outputs.tag_full_sha }}"
+          echo "Images pushed successfully!"
+          echo ""
+          echo "GitHub Image:"
+          echo "  Latest: ${{ steps.tags.outputs.github_tag_latest }}"
+          echo "  SHA: ${{ steps.tags.outputs.github_tag_sha }}"
+          echo "  Full SHA: ${{ steps.tags.outputs.github_tag_full_sha }}"
+          echo ""
+          echo "GitLab Image:"
+          echo "  Latest: ${{ steps.tags.outputs.gitlab_tag_latest }}"
+          echo "  SHA: ${{ steps.tags.outputs.gitlab_tag_sha }}"
+          echo "  Full SHA: ${{ steps.tags.outputs.gitlab_tag_full_sha }}"
