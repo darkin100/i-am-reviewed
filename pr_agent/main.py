@@ -4,6 +4,7 @@ import os
 import sys
 import subprocess
 import json
+import tempfile
 from dotenv import load_dotenv
 from google import genai
 
@@ -28,11 +29,43 @@ def get_pr_number_from_event():
     return None
 
 
+def setup_google_cloud_auth():
+    """Set up Google Cloud authentication for GitHub Actions."""
+    # If GOOGLE_APPLICATION_CREDENTIALS is already set, use it (local dev)
+    if os.getenv('GOOGLE_APPLICATION_CREDENTIALS'):
+        print("Using existing GOOGLE_APPLICATION_CREDENTIALS")
+        return
+
+    # Check if credentials JSON is provided via environment variable (GitHub Actions)
+    credentials_json = os.getenv('GOOGLE_CLOUD_CREDENTIALS_JSON')
+    if not credentials_json:
+        # No credentials provided - may rely on other auth methods
+        print("Warning: No GOOGLE_CLOUD_CREDENTIALS_JSON found. Attempting to use default credentials.")
+        return
+
+    # Write credentials to a temporary file
+    try:
+        # Create a temporary file that won't be automatically deleted
+        fd, credentials_path = tempfile.mkstemp(suffix='.json', text=True)
+        with os.fdopen(fd, 'w') as f:
+            f.write(credentials_json)
+
+        # Set the environment variable
+        os.environ['GOOGLE_APPLICATION_CREDENTIALS'] = credentials_path
+        print(f"Google Cloud credentials configured at: {credentials_path}")
+    except Exception as e:
+        print(f"Error setting up credentials: {e}")
+        raise
+
+
 def main():
     """Run PR review workflow."""
     try:
         # Load environment variables (only needed for local development)
         load_dotenv()
+
+        # Set up Google Cloud authentication
+        setup_google_cloud_auth()
 
         # Check if running in GitHub Actions
         is_github_actions = os.getenv('GITHUB_ACTIONS') == 'true'

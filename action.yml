@@ -23,6 +23,9 @@ inputs:
     description: 'Google Cloud location/region (e.g., europe-west2)'
     required: true
     default: 'europe-west2'
+  google-cloud-credentials:
+    description: 'Google Cloud service account JSON credentials (use secrets.GOOGLE_CLOUD_CREDENTIALS)'
+    required: true
 
 runs:
   using: 'docker'
@@ -34,3 +37,4 @@ runs:
     GITHUB_ACTIONS: 'true'
     GOOGLE_CLOUD_PROJECT: ${{ inputs.google-cloud-project }}
     GOOGLE_CLOUD_LOCATION: ${{ inputs.google-cloud-location }}
+    GOOGLE_CLOUD_CREDENTIALS_JSON: ${{ inputs.google-cloud-credentials }}
