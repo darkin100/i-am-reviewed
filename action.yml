@@ -25,6 +25,7 @@ runs:
   env:
     GH_TOKEN: ${{ inputs.github-token }}
     GITHUB_REPOSITORY: ${{ github.repository }}
+    GITHUB_PR_NUMBER: ${{ github.event.pull_request.number }}
     GITHUB_ACTIONS: 'true'
     GITHUB_EVENT_PATH: ${{ github.event_path }}
     GOOGLE_CLOUD_PROJECT: ${{ inputs.google-cloud-project }}

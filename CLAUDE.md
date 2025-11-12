@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-This is a PR Review Agent that uses Google's **Gemini 2.5 Flash** via Vertex AI to automatically review pull requests. The agent fetches PR data using GitHub CLI, analyzes the changes, and posts review comments.
+This is a Code Review Agent that uses Google's **Gemini 2.5 Flash** via Vertex AI to automatically review pull requests. The agent fetches PR data using GitHub CLI, analyzes the changes, and posts review comments.
 
 Documentation for Google GenAI: https://google.github.io/adk-docs/
 
