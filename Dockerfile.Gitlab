@@ -1,18 +1,20 @@
 # Multi-stage Dockerfile for PR Review Agent
 FROM python:3.13-slim as base
 
-# Install system dependencies, GitHub CLI, and Google Cloud SDK
+# Install system dependencies
 RUN apt-get update && apt-get install -y \
     curl \
     git \
     gnupg \
     lsb-release \
+    wget \
     && rm -rf /var/lib/apt/lists/*
 
-# Install GitLab CLI
-RUN curl -fsSL https://gitlab.com/gitlab-org/cli/-/releases/permalink/latest/downloads/glab_amd64.deb -o /tmp/glab.deb && \
-    dpkg -i /tmp/glab.deb && \
-    rm /tmp/glab.deb
+# Install GitLab CLI using WakeMeOps repository
+RUN curl -sSL "https://raw.githubusercontent.com/upciti/wakemeops/main/assets/install_repository" | bash && \
+    apt-get update && \
+    apt-get install -y glab && \
+    rm -rf /var/lib/apt/lists/*
 
 # Install Google Cloud SDK
 RUN echo "deb [signed-by=/usr/share/keyrings/cloud.google.gpg] https://packages.cloud.google.com/apt cloud-sdk main" | \
