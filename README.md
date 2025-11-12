@@ -1,15 +1,21 @@
 # PR Review Agent (MVP)
 
-A simple PR review agent using Google ADK and Gemini 2.5 Flash to automatically review pull requests.
+A multi-platform PR review agent using Google ADK and Gemini 2.5 Flash to automatically review pull requests and merge requests.
+
+Supports both **GitHub** and **GitLab** through a platform-agnostic architecture.
 
 ## Setup
 
 ### Prerequisites
 
 1. **Python 3.11+** with virtual environment
-2. **GitHub CLI (`gh`)** - Install from https://cli.github.com/
+2. **Git hosting CLI** (choose based on your platform):
+   - **GitHub CLI (`gh`)** - Install from https://cli.github.com/
+   - **GitLab CLI (`glab`)** - Install from https://gitlab.com/gitlab-org/cli
 3. **Google Cloud SDK** - For Vertex AI authentication
-4. **GitHub authentication** - Run `gh auth login`
+4. **Git platform authentication**:
+   - GitHub: Run `gh auth login`
+   - GitLab: Run `glab auth login`
 
 ### Installation
 
@@ -33,6 +39,8 @@ pip install -r requirements.txt
    ```
 
 2. **Edit `pr_agent/.env` with your settings:**
+
+   For **GitHub**:
    ```bash
    # Google Cloud / Vertex AI
    GOOGLE_CLOUD_PROJECT=your-project-id
@@ -43,17 +51,33 @@ pip install -r requirements.txt
    GITHUB_PR_NUMBER=1                  # PR number to review
    ```
 
+   For **GitLab**:
+   ```bash
+   # Google Cloud / Vertex AI
+   GOOGLE_CLOUD_PROJECT=your-project-id
+   GOOGLE_CLOUD_LOCATION=europe-west2  # or your preferred region
+
+   # GitLab - Update for the MR you want to review
+   CI_PROJECT_PATH=group/project       # e.g., "mygroup/myproject"
+   CI_MERGE_REQUEST_IID=1              # MR IID to review
+   ```
+
+   **Or use generic variables** (works for both platforms):
+   ```bash
+   GIT_REPOSITORY=owner/repo           # Repository identifier
+   GIT_PR_NUMBER=1                     # PR/MR number
+   ```
+
 3. **Authenticate with Google Cloud:**
    ```bash
    gcloud auth application-default login
    ```
 
-4. **Authenticate with GitHub CLI:**
-   ```bash
-   gh auth login
-   ```
+4. **Authenticate with your Git platform:**
+   - GitHub: `gh auth login`
+   - GitLab: `glab auth login`
 
-**Note**: GitHub token is handled automatically by `gh` CLI - no need to set `GITHUB_TOKEN` in `.env`.
+**Note**: Authentication tokens are handled automatically by CLI tools - no need to set tokens in `.env`.
 
 ## Usage
 
@@ -63,12 +87,16 @@ pip install -r requirements.txt
 # Make sure you're in the project root and venv is activated
 source venv/bin/activate
 
-# Run the agent
-python -m pr_agent.main
+# Run for GitHub
+python -m pr_agent.main --provider github
+
+# Or run for GitLab
+python -m pr_agent.main --provider gitlab
 ```
 
-### Test with a Real PR
+### Test with a Real PR/MR
 
+**For GitHub:**
 1. Find a public PR to test with (or create one in your own repo)
 2. Update `.env` with the repository and PR number:
    ```bash
@@ -77,9 +105,22 @@ python -m pr_agent.main
    ```
 3. Run the agent:
    ```bash
-   python -m pr_agent.main
+   python -m pr_agent.main --provider github
    ```
 4. Check the PR for the review comment
+
+**For GitLab:**
+1. Find a public MR to test with (or create one in your own project)
+2. Update `.env` with the project path and MR IID:
+   ```bash
+   CI_PROJECT_PATH=gitlab-org/gitlab
+   CI_MERGE_REQUEST_IID=100
+   ```
+3. Run the agent:
+   ```bash
+   python -m pr_agent.main --provider gitlab
+   ```
+4. Check the MR for the review comment
 
 ### Example Output
 
@@ -95,23 +136,44 @@ View at: https://github.com/owner/repo/pull/123
 
 ## Architecture
 
-The agent uses a simple, direct approach for one-shot PR reviews:
+The agent uses a **platform-agnostic architecture** with pluggable Git hosting providers:
 
-- **`pr_agent/github_tools.py`** - GitHub CLI wrapper functions
-  - `get_pr_info()` - Fetches PR metadata using `gh pr view`
-  - `get_pr_diff()` - Gets diff using `gh pr diff`
-  - `post_pr_comment()` - Posts comments using `gh pr comment`
+### Platform Abstraction Layer
 
-- **`pr_agent/main.py`** - Main execution flow
-  - Loads environment variables
-  - Fetches PR data via GitHub CLI
+- **`pr_agent/platforms/base.py`** - Abstract base class defining the platform interface
+  - `get_pr_info()` - Fetch PR/MR metadata
+  - `get_pr_diff()` - Get diff of changes
+  - `post_pr_comment()` - Post review comments
+  - `get_pr_number_from_event()` - Extract PR/MR number from CI/CD context
+
+- **`pr_agent/platforms/github.py`** - GitHub implementation using `gh` CLI
+  - Uses GitHub CLI commands (`gh pr view`, `gh pr diff`, `gh pr comment`)
+  - Supports GitHub Actions environment variables
+
+- **`pr_agent/platforms/gitlab.py`** - GitLab implementation using `glab` CLI
+  - Uses GitLab CLI commands (`glab mr view`, `glab mr diff`, `glab mr note`)
+  - Supports GitLab CI environment variables
+
+- **`pr_agent/platforms/__init__.py`** - Factory function for platform instantiation
+  - `get_platform(provider)` - Returns appropriate platform implementation
+
+### Main Application
+
+- **`pr_agent/main.py`** - Platform-agnostic main execution flow
+  - Parses command-line arguments (`--provider`)
+  - Loads platform implementation via factory
+  - Fetches PR/MR data through platform abstraction
   - Creates `google.genai.Client` for Vertex AI
   - Generates review using Gemini 2.5 Flash
-  - Posts review comment back to PR
+  - Posts review comment back through platform abstraction
 
 - **`pr_agent/reviewer.py`** - (Legacy, not currently used)
   - Originally for Google ADK Agent configuration
   - Current implementation uses genai Client directly for simplicity
+
+### Extensibility
+
+The abstract base class design makes it easy to add support for additional platforms (Bitbucket, Azure DevOps, etc.) by implementing the `GitPlatform` interface.
 
 ## Implementation Approach
 
@@ -146,9 +208,12 @@ response = client.models.generate_content(
 
 ## What's Working
 
-✅ Fetch PR metadata and diff using GitHub CLI
+✅ Multi-platform support (GitHub and GitLab)
+✅ Platform-agnostic architecture with abstract base class
+✅ Fetch PR/MR metadata and diff using platform CLI tools
 ✅ Analyze changes with Gemini 2.5 Flash
-✅ Post review as a single PR comment
+✅ Post review as a single PR/MR comment
+✅ CI/CD integration (GitHub Actions and GitLab CI)
 ✅ Basic error handling
 
 ## Post-MVP Enhancements
@@ -163,9 +228,16 @@ Future improvements (not in MVP):
 
 ## Troubleshooting
 
-### GitHub CLI not authenticated
+### Git Platform CLI not authenticated
+
+**GitHub:**
 ```bash
 gh auth login
+```
+
+**GitLab:**
+```bash
+glab auth login
 ```
 
 ### Google Cloud not authenticated
@@ -178,7 +250,14 @@ gcloud auth application-default login
 # Make sure you're in the project root
 cd /Users/glyndarkin/Work/pr-review-agent
 source venv/bin/activate
-python -m pr_agent.main
+python -m pr_agent.main --provider github  # or --provider gitlab
+```
+
+### Provider argument missing
+```bash
+# ERROR: the following arguments are required: --provider
+# Solution: Always specify --provider flag
+python -m pr_agent.main --provider github
 ```
 
 ## Documentation

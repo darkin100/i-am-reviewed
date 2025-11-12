@@ -41,5 +41,5 @@ COPY pr_agent/ ./pr_agent/
 ENV PYTHONUNBUFFERED=1
 ENV PYTHONPATH=/app
 
-# Entry point
-ENTRYPOINT ["python", "-m", "pr_agent.main"]
+# Entry point with GitHub provider
+ENTRYPOINT ["python", "-m", "pr_agent.main", "--provider", "github"]
