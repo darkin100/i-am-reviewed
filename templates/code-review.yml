@@ -1,0 +1,23 @@
+spec:
+  inputs:
+    stage:
+      default: test
+      description: 'Stage where code review runs'
+    gitlab_token:
+      description: 'GitLab API token (store as protected CI/CD variable)'
+---
+code-review:
+  stage: $[[ inputs.stage ]]
+  # Automatically use the image version matching the component version
+  image: 'docker://europe-west2-docker.pkg.dev/iamreleased/docker-images/pr-review-agent:latest'
+  variables:
+    GITLAB_TOKEN: $[[ inputs.gitlab_token ]]
+  script:
+    - echo "🔍 Running code review with image version $CI_COMMIT_REF_NAME"
+  rules:
+    # - if: $CI_PIPELINE_SOURCE == 'merge_request_event'
+  # artifacts:
+    # reports:
+      # Optional: Generate code quality report
+      # codequality: gl-code-quality-report.json
+    # when: always
