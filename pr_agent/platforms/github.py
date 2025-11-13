@@ -109,3 +109,15 @@ class GitHubPlatform(GitPlatform):
             print(f"Warning: Could not extract PR number from event: {e}")
 
         return None
+
+    def setup_auth(self) -> None:
+        """Set up GitHub CLI authentication.
+
+        GitHub CLI authentication is typically handled externally:
+        - Locally: via 'gh auth login'
+        - GitHub Actions: via GITHUB_TOKEN environment variable
+
+        This method is a no-op as gh CLI handles authentication automatically.
+        """
+        # No authentication setup needed - gh CLI handles this automatically
+        pass

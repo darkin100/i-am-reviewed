@@ -206,6 +206,70 @@ response = client.models.generate_content(
 - Direct model invocation is faster to implement
 - Can upgrade to full ADK framework later if needed for multi-turn conversations or complex workflows
 
+## CI/CD Integration
+
+The agent can be deployed as a GitHub Action or GitLab CI job to automatically review PRs/MRs.
+
+### GitHub Actions
+
+See [docs/example-github-actions.yml](docs/example-github-actions.yml) for a complete example.
+
+**Quick setup:**
+
+1. Copy the example workflow to `.github/workflows/review-pr.yml`
+2. Set up repository secrets:
+   - `GOOGLE_CLOUD_PROJECT`: Your GCP project ID
+   - `GOOGLE_CLOUD_LOCATION`: GCP region (e.g., `europe-west2`)
+   - `GOOGLE_CLOUD_CREDENTIALS`: Your GCP service account JSON
+3. The workflow automatically uses `secrets.GITHUB_TOKEN` for GitHub API access
+
+**Usage in workflow:**
+
+```yaml
+steps:
+  - uses: darkin100/i-am-reviewed@v1.0
+    with:
+      github-token: ${{ secrets.GITHUB_TOKEN }}
+      repository: ${{ github.repository }}
+      pr-number: ${{ github.event.pull_request.number }}
+      google-cloud-project: ${{ secrets.GOOGLE_CLOUD_PROJECT }}
+      google-cloud-location: ${{ secrets.GOOGLE_CLOUD_LOCATION }}
+      google-cloud-credentials: ${{ secrets.GOOGLE_CLOUD_CREDENTIALS }}
+```
+
+### GitLab CI
+
+See [docs/example-gitlab-ci.yml](docs/example-gitlab-ci.yml) for a complete example.
+
+**Quick setup:**
+
+1. Copy the example workflow to `.gitlab-ci.yml` in your repository root
+2. Set up CI/CD variables in your GitLab project (Settings > CI/CD > Variables):
+   - `GOOGLE_CLOUD_PROJECT`: Your GCP project ID
+   - `GOOGLE_CLOUD_LOCATION`: GCP region (e.g., `europe-west2`)
+   - `GOOGLE_CLOUD_CREDENTIALS`: Your GCP service account JSON (as File type)
+3. The pipeline automatically uses `CI_JOB_TOKEN` for GitLab API access (no additional token required)
+
+**Usage in .gitlab-ci.yml:**
+
+```yaml
+review_merge_request:
+  stage: review
+  image: europe-west2-docker.pkg.dev/iamreleased/docker-images/pr-review-agent-gitlab:latest
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
+  variables:
+    GOOGLE_CLOUD_PROJECT: $GOOGLE_CLOUD_PROJECT
+    GOOGLE_CLOUD_LOCATION: $GOOGLE_CLOUD_LOCATION
+    GOOGLE_CLOUD_CREDENTIALS_JSON: $GOOGLE_CLOUD_CREDENTIALS
+    GITLAB_TOKEN: $CI_JOB_TOKEN
+```
+
+**Important for GitLab:**
+- The `GITLAB_TOKEN` environment variable is required for the `glab` CLI to authenticate
+- Use `CI_JOB_TOKEN` (automatically provided by GitLab CI) or a project/personal access token
+- The `CI_JOB_TOKEN` has permissions to read MR data and post comments automatically
+
 ## What's Working
 
 ✅ Multi-platform support (GitHub and GitLab)
@@ -239,6 +303,28 @@ gh auth login
 ```bash
 glab auth login
 ```
+
+### GitLab 401 Unauthorized Error in CI/CD
+
+If you see `401 Unauthorized` when running in GitLab CI:
+
+```
+Error: CLI command failed: Command '['glab', 'mr', 'diff', '9', '-R', 'repo/name']' returned non-zero exit status 1.
+stderr: ERROR Could not find merge request diffs: GET https://gitlab.com/api/v4/...: 401 {message: 401 Unauthorized}
+```
+
+**Solution:** Ensure `GITLAB_TOKEN` is set in your CI/CD pipeline:
+
+```yaml
+variables:
+  GITLAB_TOKEN: $CI_JOB_TOKEN  # Use GitLab's automatic job token
+```
+
+The `CI_JOB_TOKEN` is automatically provided by GitLab CI and has the necessary permissions to:
+- Read merge request data
+- Post comments on merge requests
+
+**Alternative:** If `CI_JOB_TOKEN` doesn't work, create a project or personal access token with `api` scope and add it as a CI/CD variable named `GITLAB_TOKEN`.
 
 ### Google Cloud not authenticated
 ```bash

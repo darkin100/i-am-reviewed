@@ -130,3 +130,51 @@ class GitLabPlatform(GitPlatform):
                 return None
 
         return None
+
+    def setup_auth(self) -> None:
+        """Set up GitLab CLI authentication.
+
+        In GitLab CI/CD, authenticates using the CI_JOB_TOKEN.
+        For local development, assumes glab is already authenticated via 'glab auth login'.
+
+        Raises:
+            subprocess.CalledProcessError: If the glab auth command fails
+        """
+        # Check if running in GitLab CI/CD context
+        ci_job_token = os.getenv('CI_JOB_TOKEN')
+        ci_server_host = os.getenv('CI_SERVER_HOST')
+        ci_server_protocol = os.getenv('CI_SERVER_PROTOCOL')
+        ci_server_url = os.getenv('CI_SERVER_URL')
+
+        if ci_job_token and ci_server_host:
+            # Running in GitLab CI - authenticate using job token
+            print(f"Authenticating glab with CI_JOB_TOKEN for {ci_server_host}")
+
+            # Set GITLAB_HOST environment variable for glab commands
+            if ci_server_url:
+                os.environ['GITLAB_HOST'] = ci_server_url
+                print(f"Set GITLAB_HOST={ci_server_url}")
+
+            # Use default protocol if not specified
+            if not ci_server_protocol:
+                ci_server_protocol = 'https'
+
+            # Authenticate glab with job token
+            cmd = [
+                'glab', 'auth', 'login',
+                '--job-token', ci_job_token,
+                '--hostname', ci_server_host,
+                '--api-protocol', ci_server_protocol
+            ]
+
+            result = subprocess.run(
+                cmd,
+                capture_output=True,
+                text=True,
+                check=True
+            )
+
+            print("GitLab CLI authenticated successfully")
+        else:
+            # Local development - assume glab is already authenticated
+            print("Running locally - assuming glab is already authenticated via 'glab auth login'")

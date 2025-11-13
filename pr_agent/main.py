@@ -180,6 +180,9 @@ def main():
             print(f"Error: {e}")
             sys.exit(1)
 
+        # Set up platform authentication
+        platform.setup_auth()
+
         # Get repository identifier
         repo = get_repository_identifier(platform_name)
         print(f"Repository: {repo}")

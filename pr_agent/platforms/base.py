@@ -79,6 +79,22 @@ class GitPlatform(ABC):
         """
         pass
 
+    @abstractmethod
+    def setup_auth(self) -> None:
+        """Set up authentication for the platform CLI tool.
+
+        Each platform may require different authentication setup:
+        - GitHub: Typically relies on gh auth login (done manually/locally)
+        - GitLab: Requires glab auth login with CI_JOB_TOKEN in CI/CD
+
+        This method should handle both CI/CD and local development scenarios.
+
+        Raises:
+            subprocess.CalledProcessError: If the auth command fails
+            Exception: For other authentication errors
+        """
+        pass
+
     def get_platform_name(self) -> str:
         """Return the name of this platform (for logging/debugging).
 
