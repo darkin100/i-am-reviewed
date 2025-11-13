@@ -37,7 +37,7 @@ class GitLabPlatform(GitPlatform):
         cmd = [
             'glab', 'mr', 'view', str(pr_number),
             '-R', repo,
-            '--json'
+            '-F', 'json'
         ]
 
         result = subprocess.run(
