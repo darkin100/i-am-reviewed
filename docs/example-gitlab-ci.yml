@@ -7,21 +7,21 @@
 #    - GOOGLE_CLOUD_PROJECT: Your GCP project ID
 #    - GOOGLE_CLOUD_LOCATION: GCP region (e.g., europe-west2)
 #    - GOOGLE_CLOUD_CREDENTIALS_JSON: Your GCP service account JSON (as File type variable)
+#    - GITLAB_TOKEN: Personal Access Token with 'read_api' scope (REQUIRED - masked variable)
+#
+#    IMPORTANT: GITLAB_TOKEN is required because CI_JOB_TOKEN has limited API access
+#    and cannot read merge request diffs. Create a PAT at: Settings → Access Tokens
 #
 # 2. The following variables are automatically provided by GitLab CI:
-#    - CI_JOB_TOKEN: Authentication token for GitLab API
+#    - CI_JOB_TOKEN: Built-in authentication token (has limited API access)
 #    - CI_SERVER_HOST: GitLab server hostname (e.g., gitlab.com)
 #    - CI_SERVER_PROTOCOL: Protocol (http/https)
 #    - CI_SERVER_URL: Full GitLab server URL
 #    - CI_PROJECT_PATH: Repository path (group/project)
 #    - CI_MERGE_REQUEST_IID: Merge request number
-#    No additional token setup is required!
 
 stages:
   - build
-
-rules:
-  - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
 
 build-job:
   stage: build
@@ -30,12 +30,13 @@ build-job:
     - docker:dind
   script:
     - echo "Running code review with pr-review-agent"
-    - echo "GIT_REPOSITORY=$CI_PROJECT_PATH"
-    - echo "GIT_PR_NUMBER=$CI_MERGE_REQUEST_IID"
+    - echo "CI_PROJECT_PATH=$CI_PROJECT_PATH"
+    - echo "CI_MERGE_REQUEST_IID=$CI_MERGE_REQUEST_IID"
     - echo "GOOGLE_CLOUD_PROJECT=$GOOGLE_CLOUD_PROJECT"
     - echo "GOOGLE_CLOUD_LOCATION=$GOOGLE_CLOUD_LOCATION"
     - >
       docker run --rm -v "$CI_PROJECT_DIR:/workspace"
+      -e "GITLAB_TOKEN=$GITLAB_TOKEN"
       -e "CI_JOB_TOKEN=$CI_JOB_TOKEN"
       -e "CI_SERVER_HOST=$CI_SERVER_HOST"
       -e "CI_SERVER_PROTOCOL=$CI_SERVER_PROTOCOL"
@@ -48,4 +49,5 @@ build-job:
       -e "GOOGLE_CLOUD_LOCATION=$GOOGLE_CLOUD_LOCATION"
       -e "GOOGLE_CLOUD_CREDENTIALS_JSON=$GOOGLE_CLOUD_CREDENTIALS_JSON"
       europe-west2-docker.pkg.dev/iamreleased/docker-images/pr-review-agent-gitlab:latest
-
+  rules:
+    - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'

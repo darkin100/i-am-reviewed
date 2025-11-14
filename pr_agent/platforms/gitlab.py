@@ -134,32 +134,50 @@ class GitLabPlatform(GitPlatform):
     def setup_auth(self) -> None:
         """Set up GitLab CLI authentication.
 
-        In GitLab CI/CD, authenticates using the CI_JOB_TOKEN.
-        For local development, assumes glab is already authenticated via 'glab auth login'.
+        Authentication priority:
+        1. GITLAB_TOKEN (Personal Access Token) - preferred for full API access
+        2. CI_JOB_TOKEN - fallback for CI/CD (has limited API access)
+        3. Assume already authenticated locally via 'glab auth login'
 
         Raises:
             subprocess.CalledProcessError: If the glab auth command fails
         """
-        # Check if running in GitLab CI/CD context
+        # Get environment variables
+        gitlab_token = os.getenv('GITLAB_TOKEN')
         ci_job_token = os.getenv('CI_JOB_TOKEN')
-        ci_server_host = os.getenv('CI_SERVER_HOST')
-        ci_server_protocol = os.getenv('CI_SERVER_PROTOCOL')
+        ci_server_host = os.getenv('CI_SERVER_HOST', 'gitlab.com')
+        ci_server_protocol = os.getenv('CI_SERVER_PROTOCOL', 'https')
         ci_server_url = os.getenv('CI_SERVER_URL')
 
-        if ci_job_token and ci_server_host:
-            # Running in GitLab CI - authenticate using job token
+        # Set GITLAB_HOST environment variable for glab commands
+        if ci_server_url:
+            os.environ['GITLAB_HOST'] = ci_server_url
+            print(f"Set GITLAB_HOST={ci_server_url}")
+
+        # Priority 1: Use GITLAB_TOKEN (Personal Access Token) if available
+        if gitlab_token:
+            print(f"Authenticating glab with GITLAB_TOKEN (PAT) for {ci_server_host}")
+
+            cmd = [
+                'glab', 'auth', 'login',
+                '--token', gitlab_token,
+                '--hostname', ci_server_host
+            ]
+
+            result = subprocess.run(
+                cmd,
+                capture_output=True,
+                text=True,
+                check=True
+            )
+
+            print("GitLab CLI authenticated successfully with PAT")
+
+        # Priority 2: Use CI_JOB_TOKEN if available (limited API access)
+        elif ci_job_token and ci_server_host:
             print(f"Authenticating glab with CI_JOB_TOKEN for {ci_server_host}")
+            print("Warning: CI_JOB_TOKEN has limited API access. Some operations may fail.")
 
-            # Set GITLAB_HOST environment variable for glab commands
-            if ci_server_url:
-                os.environ['GITLAB_HOST'] = ci_server_url
-                print(f"Set GITLAB_HOST={ci_server_url}")
-
-            # Use default protocol if not specified
-            if not ci_server_protocol:
-                ci_server_protocol = 'https'
-
-            # Authenticate glab with job token
             cmd = [
                 'glab', 'auth', 'login',
                 '--job-token', ci_job_token,
@@ -174,7 +192,8 @@ class GitLabPlatform(GitPlatform):
                 check=True
             )
 
-            print("GitLab CLI authenticated successfully")
+            print("GitLab CLI authenticated successfully with CI_JOB_TOKEN")
+
+        # Priority 3: Assume already authenticated locally
         else:
-            # Local development - assume glab is already authenticated
             print("Running locally - assuming glab is already authenticated via 'glab auth login'")
