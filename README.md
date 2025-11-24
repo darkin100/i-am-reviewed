@@ -352,17 +352,6 @@ python -m pr_agent.main --provider github
 - [Implementation Plan](docs/IMPLEMENTATION_PLAN.md)
 
 
-## Gitlab Access
-
-The GITLAP_CITO
-
-You will need to give fine grained permissions to the ci-job-token
-
-
-https://docs.gitlab.com/ci/jobs/fine_grained_permissions/
-
-
-
 ## License
 
 MIT
