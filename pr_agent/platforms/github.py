@@ -12,7 +12,6 @@ class GitHubPlatform(GitPlatform):
     """GitHub platform implementation using gh CLI.
 
     This implementation uses the GitHub CLI (gh) to interact with GitHub's API.
-    Authentication is handled by gh CLI (typically via gh auth login or GITHUB_TOKEN).
     """
 
     def get_pr_info(self, repo: str, pr_number: int) -> Dict:
@@ -115,7 +114,6 @@ class GitHubPlatform(GitPlatform):
 
         GitHub CLI authentication is typically handled externally:
         - Locally: via 'gh auth login'
-        - GitHub Actions: via GITHUB_TOKEN environment variable
 
         This method is a no-op as gh CLI handles authentication automatically.
         """

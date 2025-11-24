@@ -1,10 +1,11 @@
 # Deployment Guide
 
-This guide covers deploying the PR Review Agent as a Docker container and GitHub Action.
+This guide covers deploying the PR Review Agent as a Docker container as part of either a GitHub Action or a Gitlab Job.
 
 ## Table of Contents
 - [Docker Setup](#docker-setup)
 - [GitHub Actions Setup](#github-actions-setup)
+- [GitLab Actions Setup](#gitlab-actions-setup)
 - [Workload Identity Federation Setup](#workload-identity-federation-setup)
 - [Testing](#testing)
 - [Troubleshooting](#troubleshooting)
@@ -32,6 +33,8 @@ docker build -t pr-review-agent:latest .
    ```
 
 3. **Run the container:**
+
+Whilst you can run the container locally, you need to specify the PR/MR that you want to process
    ```bash
    docker run --rm \
      -e GITHUB_REPOSITORY=owner/repo \
@@ -365,3 +368,21 @@ For issues or questions:
 2. Review GitHub Actions workflow logs
 3. Check Google Cloud logs in Cloud Console
 4. Open an issue in the repository
+
+Summary Table
+
+  | Variable                       | Read/Write | Files                      | Required  | Purpose                           |
+  |--------------------------------|------------|----------------------------|-----------|---------------------------------------|
+  | GOOGLE_CLOUD_CREDENTIALS_JSON  | Read       | main.py:18                 | Optional  | Service  account JSON for CI/CD        |
+  | GOOGLE_APPLICATION_CREDENTIALS | Write      | main.py:32                 | -         | Set by code  (temp file path)          |
+  | GOOGLE_CLOUD_PROJECT           | Read       | main.py:185                | Yes       | GCP project ID                          |
+  | GOOGLE_CLOUD_LOCATION          | Read       | main.py:186                | Yes       | GCP region                          |
+  | REPOSITORY                     | Read       | main.py:51                 | Optional* | Generic repo  identifier               |
+  | PR_NUMBER                      | Read       | main.py:73                 | Optional* | Generic PR/MR  number                  |
+  | CI_SERVER_HOST                 | Read       | main.py:233, gitlab.py:148 | Optional  | GitLab  hostname (default: gitlab.com) |
+  | GITHUB_EVENT_PATH              | Read       | github.py:97               | Optional  | GitHub Actions   event file             |
+  | CI_MERGE_REQUEST_IID           | Read       | gitlab.py:124              | Optional  | GitLab MR  number                      |
+  | GITLAB_TOKEN                   | Read       | gitlab.py:146              | Yes*      | GitLab PAT  (required for MR API)      |
+  | CI_JOB_TOKEN                   | Read       | gitlab.py:147              | Optional  | GitLab CI  token (fallback)            |
+  | CI_SERVER_PROTOCOL             | Read       | gitlab.py:149              | Optional  | http/https  (default: https)           |
+  | CI_SERVER_URL                  | Read       | gitlab.py:150              | Optional  | Full GitLab  URL                       |

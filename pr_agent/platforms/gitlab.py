@@ -149,11 +149,6 @@ class GitLabPlatform(GitPlatform):
         ci_server_protocol = os.getenv('CI_SERVER_PROTOCOL', 'https')
         ci_server_url = os.getenv('CI_SERVER_URL')
 
-        # Set GITLAB_HOST environment variable for glab commands
-        if ci_server_url:
-            os.environ['GITLAB_HOST'] = ci_server_url
-            print(f"Set GITLAB_HOST={ci_server_url}")
-
         # Priority 1: Use GITLAB_TOKEN (Personal Access Token) if available
         if gitlab_token:
             print(f"Authenticating glab with GITLAB_TOKEN (PAT) for {ci_server_host}")

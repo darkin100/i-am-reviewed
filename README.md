@@ -64,8 +64,8 @@ pip install -r requirements.txt
 
    **Or use generic variables** (works for both platforms):
    ```bash
-   GIT_REPOSITORY=owner/repo           # Repository identifier
-   GIT_PR_NUMBER=1                     # PR/MR number
+   REPOSITORY=owner/repo           # Repository identifier
+   PR_NUMBER=1                     # PR/MR number
    ```
 
 3. **Authenticate with Google Cloud:**
@@ -350,6 +350,18 @@ python -m pr_agent.main --provider github
 
 - [Google ADK Documentation](https://google.github.io/adk-docs/)
 - [Implementation Plan](docs/IMPLEMENTATION_PLAN.md)
+
+
+## Gitlab Access
+
+The GITLAP_CITO
+
+You will need to give fine grained permissions to the ci-job-token
+
+
+https://docs.gitlab.com/ci/jobs/fine_grained_permissions/
+
+
 
 ## License
 

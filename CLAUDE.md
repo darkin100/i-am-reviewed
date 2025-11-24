@@ -49,8 +49,8 @@ CI_MERGE_REQUEST_IID=1
 
 **Or use generic variables** (works for both):
 ```bash
-GIT_REPOSITORY=owner/repo
-GIT_PR_NUMBER=1
+REPOSITORY=owner/repo
+PR_NUMBER=1
 ```
 
 **Note:** CLI authentication is handled via `gh auth login` (GitHub) or `glab auth login` (GitLab) - no tokens needed in `.env` if already authenticated.
@@ -187,3 +187,10 @@ This approach is simpler for one-shot tasks like PR reviews compared to using th
 5. **Docker Images**: Two separate Docker images are built:
    - `Dockerfile.Github` - Includes `gh` CLI, sets `--provider github`
    - `Dockerfile.Gitlab` - Includes `glab` CLI, sets `--provider gitlab`
+
+
+## External Documentation
+
+GitLab documentation used
+
+   https://docs.gitlab.com/topics/build_your_application/
