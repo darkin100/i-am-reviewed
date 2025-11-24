@@ -35,11 +35,11 @@ COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
 # Copy application code
-COPY pr_agent/ ./pr_agent/
+COPY agent/ ./agent/
 
 # Set Python path
 ENV PYTHONUNBUFFERED=1
 ENV PYTHONPATH=/app
 
 # Entry point with GitHub provider
-ENTRYPOINT ["python", "-m", "pr_agent.main", "--provider", "github"]
+ENTRYPOINT ["python", "-m", "agent.main", "--provider", "github"]

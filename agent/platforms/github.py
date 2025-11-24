@@ -5,7 +5,7 @@ import json
 import subprocess
 from typing import Dict, Optional, List
 
-from pr_agent.platforms.base import GitPlatform
+from agent.platforms.base import GitPlatform
 
 
 class GitHubPlatform(GitPlatform):

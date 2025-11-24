@@ -8,7 +8,7 @@ import tempfile
 from dotenv import load_dotenv
 from google import genai
 
-from pr_agent.platforms import get_platform
+from agent.platforms import get_platform
 
 
 def setup_google_cloud_auth():
@@ -143,10 +143,10 @@ def parse_arguments():
         epilog="""
 Examples:
   # Review GitHub PR
-  python -m pr_agent.main --provider github
+  python -m agent.main --provider github
 
   # Review GitLab MR
-  python -m pr_agent.main --provider gitlab
+  python -m agent.main --provider gitlab
 
 Environment Variables:
   REPOSITORY

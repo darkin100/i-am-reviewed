@@ -35,10 +35,10 @@ pip install -r requirements.txt
 
 1. **Copy the example environment file:**
    ```bash
-   cp pr_agent/.env.example pr_agent/.env
+   cp agent/.env.example agent/.env
    ```
 
-2. **Edit `pr_agent/.env` with your settings:**
+2. **Edit `agent/.env` with your settings:**
 
    For **GitHub**:
    ```bash
@@ -85,10 +85,10 @@ pip install -r requirements.txt
 source venv/bin/activate
 
 # Run for GitHub
-python -m pr_agent.main --provider github
+python -m agent.main --provider github
 
 # Or run for GitLab
-python -m pr_agent.main --provider gitlab
+python -m agent.main --provider gitlab
 ```
 
 ### Test with a Real PR/MR
@@ -103,7 +103,7 @@ python -m pr_agent.main --provider gitlab
    ```
 3. Run the agent:
    ```bash
-   python -m pr_agent.main --provider github
+   python -m agent.main --provider github
    ```
 4. Check the PR for the review comment
 
@@ -117,7 +117,7 @@ python -m pr_agent.main --provider gitlab
    ```
 3. Run the agent:
    ```bash
-   python -m pr_agent.main --provider gitlab
+   python -m agent.main --provider gitlab
    ```
 4. Check the MR for the review comment
 
@@ -139,25 +139,25 @@ The agent uses a **platform-agnostic architecture** with pluggable Git hosting p
 
 ### Platform Abstraction Layer
 
-- **`pr_agent/platforms/base.py`** - Abstract base class defining the platform interface
+- **`agent/platforms/base.py`** - Abstract base class defining the platform interface
   - `get_pr_info()` - Fetch PR/MR metadata
   - `get_pr_diff()` - Get diff of changes
   - `post_pr_comment()` - Post review comments
 
-- **`pr_agent/platforms/github.py`** - GitHub implementation using `gh` CLI
+- **`agent/platforms/github.py`** - GitHub implementation using `gh` CLI
   - Uses GitHub CLI commands (`gh pr view`, `gh pr diff`, `gh pr comment`)
   - Supports GitHub Actions environment variables
 
-- **`pr_agent/platforms/gitlab.py`** - GitLab implementation using `glab` CLI
+- **`agent/platforms/gitlab.py`** - GitLab implementation using `glab` CLI
   - Uses GitLab CLI commands (`glab mr view`, `glab mr diff`, `glab mr note`)
   - Supports GitLab CI environment variables
 
-- **`pr_agent/platforms/__init__.py`** - Factory function for platform instantiation
+- **`agent/platforms/__init__.py`** - Factory function for platform instantiation
   - `get_platform(provider)` - Returns appropriate platform implementation
 
 ### Main Application
 
-- **`pr_agent/main.py`** - Platform-agnostic main execution flow
+- **`agent/main.py`** - Platform-agnostic main execution flow
   - Parses command-line arguments (`--provider`)
   - Loads platform implementation via factory
   - Fetches PR/MR data through platform abstraction
@@ -165,7 +165,7 @@ The agent uses a **platform-agnostic architecture** with pluggable Git hosting p
   - Generates review using Gemini 2.5 Flash
   - Posts review comment back through platform abstraction
 
-- **`pr_agent/reviewer.py`** - (Legacy, not currently used)
+- **`agent/reviewer.py`** - (Legacy, not currently used)
   - Originally for Google ADK Agent configuration
   - Current implementation uses genai Client directly for simplicity
 
@@ -338,14 +338,14 @@ gcloud auth application-default login
 # Make sure you're in the project root
 cd /Users/glyndarkin/Work/pr-review-agent
 source venv/bin/activate
-python -m pr_agent.main --provider github  # or --provider gitlab
+python -m agent.main --provider github  # or --provider gitlab
 ```
 
 ### Provider argument missing
 ```bash
 # ERROR: the following arguments are required: --provider
 # Solution: Always specify --provider flag
-python -m pr_agent.main --provider github
+python -m agent.main --provider github
 ```
 
 ## Documentation

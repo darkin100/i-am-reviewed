@@ -23,7 +23,7 @@ The project uses a Python virtual environment located at `venv/`.
 source venv/bin/activate
 ```
 
-**Required environment variables (in `pr_agent/.env`):**
+**Required environment variables (in `agent/.env`):**
 
 For **GitHub**:
 ```bash
@@ -65,34 +65,34 @@ CI_SERVER_HOST=gitlab.com       # Optional: custom GitLab instance
 
 ### Platform Abstraction Layer
 
-**`pr_agent/platforms/base.py`** - Abstract base class (`GitPlatform`):
+**`agent/platforms/base.py`** - Abstract base class (`GitPlatform`):
 - Defines the interface all platform implementations must follow
 - `get_pr_info(repo, pr_number)` - Fetch PR/MR metadata
 - `get_pr_diff(repo, pr_number)` - Get full diff
 - `post_pr_comment(repo, pr_number, body)` - Post review comment
 
-**`pr_agent/platforms/github.py`** - GitHub implementation (`GitHubPlatform`):
+**`agent/platforms/github.py`** - GitHub implementation (`GitHubPlatform`):
 - Uses `gh` CLI commands (`gh pr view`, `gh pr diff`, `gh pr comment`)
 - Extracts PR number from `GITHUB_EVENT_PATH` in GitHub Actions
 
-**`pr_agent/platforms/gitlab.py`** - GitLab implementation (`GitLabPlatform`):
+**`agent/platforms/gitlab.py`** - GitLab implementation (`GitLabPlatform`):
 - Uses `glab` CLI commands (`glab mr view`, `glab mr diff`, `glab mr note`)
 - Extracts MR IID from `CI_MERGE_REQUEST_IID` in GitLab CI
 - Normalizes GitLab MR data to match GitHub's structure
 
-**`pr_agent/platforms/__init__.py`** - Platform factory:
+**`agent/platforms/__init__.py`** - Platform factory:
 - `get_platform(provider)` - Returns the appropriate platform instance
 
 ### Main Application
 
-**`pr_agent/main.py`** - Platform-agnostic main execution script:
+**`agent/main.py`** - Platform-agnostic main execution script:
 - Parses command-line arguments (`--provider github` or `--provider gitlab`)
 - Uses platform factory to get appropriate implementation
 - Fetches PR/MR data through platform abstraction
 - Creates Gemini client and generates review
 - Posts review comment through platform abstraction
 
-**`pr_agent/reviewer.py`** - (Legacy, not currently used)
+**`agent/reviewer.py`** - (Legacy, not currently used)
 - Originally defined ADK Agent configuration
 - Current implementation uses `google.genai.Client` directly instead
 
@@ -107,9 +107,9 @@ CI_SERVER_HOST=gitlab.com       # Optional: custom GitLab instance
 
 ## How to Run the PR Review Agent
 
-1. **Configure environment variables** in `pr_agent/.env`:
+1. **Configure environment variables** in `agent/.env`:
    ```bash
-   cp pr_agent/.env.example pr_agent/.env
+   cp agent/.env.example agent/.env
    # Edit .env with your GCP project and target PR/MR details
    ```
 
@@ -127,10 +127,10 @@ CI_SERVER_HOST=gitlab.com       # Optional: custom GitLab instance
    source venv/bin/activate
 
    # For GitHub
-   python -m pr_agent.main --provider github
+   python -m agent.main --provider github
 
    # For GitLab
-   python -m pr_agent.main --provider gitlab
+   python -m agent.main --provider gitlab
    ```
 
 The agent will:
@@ -184,7 +184,7 @@ This approach is simpler for one-shot tasks like PR reviews compared to using th
    - This determines which platform implementation to use
 
 4. **Environment Variables**: All configuration is via `.env` file
-   - See `pr_agent/.env.example` for template
+   - See `agent/.env.example` for template
    - `.env` is gitignored to protect credentials
    - **Required variables**:
      - `REPOSITORY` (or `GITHUB_REPOSITORY`/`CI_PROJECT_PATH`)

@@ -1,8 +1,8 @@
 """Platform abstraction for different Git hosting providers."""
 
-from pr_agent.platforms.base import GitPlatform
-from pr_agent.platforms.github import GitHubPlatform
-from pr_agent.platforms.gitlab import GitLabPlatform
+from agent.platforms.base import GitPlatform
+from agent.platforms.github import GitHubPlatform
+from agent.platforms.gitlab import GitLabPlatform
 
 
 def get_platform(provider: str) -> GitPlatform:
