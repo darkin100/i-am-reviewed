@@ -15,10 +15,10 @@ def setup_google_cloud_auth():
 
 
     # Check if credentials JSON is provided via environment variable (CI/CD)
-    credentials_json = os.getenv('GOOGLE_CLOUD_CREDENTIALS_JSON')
+    credentials_json = os.getenv('GOOGLE_CLOUD_CREDENTIALS')
     if not credentials_json:
         # No credentials provided - may rely on other auth methods
-        print("Warning: No GOOGLE_CLOUD_CREDENTIALS_JSON found. Attempting to use default credentials.")
+        print("Warning: No GOOGLE_CLOUD_CREDENTIALS found. Attempting to use default credentials.")
         return
 
     # Write credentials to a temporary file

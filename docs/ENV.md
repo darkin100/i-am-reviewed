@@ -2,8 +2,7 @@
 
 | Variable                       | Read/Write | Files                      | Required  | Purpose                           |
 |--------------------------------|------------|----------------------------|-----------|---------------------------------------|
-| GOOGLE_CLOUD_CREDENTIALS_JSON  | Read       | main.py:18                 | Optional  | Service  account JSON for CI/CD        |
-| GOOGLE_APPLICATION_CREDENTIALS | Write      | main.py:32                 | -         | Set by code  (temp file path)          |
+| GOOGLE_APPLICATION_CREDENTIALS | Read       | main.py:32                 | -         | Set by code  (temp file path)          |
 | GOOGLE_CLOUD_PROJECT           | Read       | main.py:185                | Yes       | GCP project ID                          |
 | GOOGLE_CLOUD_LOCATION          | Read       | main.py:186                | Yes       | GCP region                          |
 | REPOSITORY                     | Read       | main.py:51                 | Yes       | Generic repo  identifier               |

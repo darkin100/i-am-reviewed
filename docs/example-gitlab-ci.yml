@@ -20,7 +20,7 @@ build-job:
       -e "PR_NUMBER=$CI_MERGE_REQUEST_IID"
       -e "GOOGLE_CLOUD_PROJECT=$GOOGLE_CLOUD_PROJECT"
       -e "GOOGLE_CLOUD_LOCATION=$GOOGLE_CLOUD_LOCATION"
-      -e "GOOGLE_CLOUD_CREDENTIALS_JSON=$GOOGLE_CLOUD_CREDENTIALS_JSON"
+      -e "GOOGLE_CLOUD_CREDENTIALS=$GOOGLE_CLOUD_CREDENTIALS"
       europe-west2-docker.pkg.dev/iamreleased/docker-images/pr-review-agent-gitlab:latest
   rules:
    - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'

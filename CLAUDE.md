@@ -37,7 +37,7 @@ PR_NUMBER=1                     # PR number to review
 GH_TOKEN=ghp_xxxxxxxxxxxx       # GitHub Personal Access Token
 
 # Optional: Google Cloud credentials for CI/CD
-# GOOGLE_CLOUD_CREDENTIALS_JSON=<service-account-json>
+# GOOGLE_CLOUD_CREDENTIALS=<service-account-json>
 ```
 
 For **GitLab**:
@@ -53,7 +53,7 @@ GITLAB_TOKEN=glpat-xxxxxxxxxxxx # GitLab Personal Access Token
 CI_SERVER_HOST=gitlab.com       # Optional: custom GitLab instance
 
 # Optional: Google Cloud credentials for CI/CD
-# GOOGLE_CLOUD_CREDENTIALS_JSON=<service-account-json>
+# GOOGLE_CLOUD_CREDENTIALS=<service-account-json>
 ```
 
 **Note:**

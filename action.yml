@@ -36,4 +36,4 @@ runs:
     PR_NUMBER: ${{ inputs.pr-number }}
     GOOGLE_CLOUD_PROJECT: ${{ inputs.google-cloud-project }}
     GOOGLE_CLOUD_LOCATION: ${{ inputs.google-cloud-location }}
-    GOOGLE_CLOUD_CREDENTIALS_JSON: ${{ inputs.google-cloud-credentials }}
+    GOOGLE_CLOUD_CREDENTIALS: ${{ inputs.google-cloud-credentials }}
