@@ -8,3 +8,20 @@ on:
 permissions:
   pull-requests: write  # Required for posting comments
   contents: read        # Required for checking out code
+
+jobs:
+  review:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Run AI PR Review
+        uses: ./
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          repository: ${{ github.repository }}
+          pr-number: ${{ github.event.pull_request.number }}
+          google-cloud-project: ${{ secrets.GOOGLE_CLOUD_PROJECT }}
+          google-cloud-location: ${{ secrets.GOOGLE_CLOUD_LOCATION }}
+          google-cloud-credentials: ${{ secrets.GOOGLE_CLOUD_CREDENTIALS }}
