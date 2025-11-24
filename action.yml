@@ -33,7 +33,6 @@ runs:
   env:
     REPOSITORY: ${{ inputs.repository }}
     PR_NUMBER: ${{ inputs.pr-number }}
-    GITHUB_ACTIONS: 'true'
     GOOGLE_CLOUD_PROJECT: ${{ inputs.google-cloud-project }}
     GOOGLE_CLOUD_LOCATION: ${{ inputs.google-cloud-location }}
     GOOGLE_CLOUD_CREDENTIALS_JSON: ${{ inputs.google-cloud-credentials }}
