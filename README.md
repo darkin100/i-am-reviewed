@@ -47,8 +47,9 @@ pip install -r requirements.txt
    GOOGLE_CLOUD_LOCATION=europe-west2  # or your preferred region
 
    # GitHub - Update for the PR you want to review
-   GITHUB_REPOSITORY=owner/repo        # e.g., "darkin100/i-am-reviewed"
-   GITHUB_PR_NUMBER=1                  # PR number to review
+   REPOSITORY=owner/repo               # e.g., "darkin100/i-am-reviewed"
+   PR_NUMBER=1                         # PR number to review
+   GH_TOKEN=ghp_xxxxxxxxxxxx           # GitHub Personal Access Token
    ```
 
    For **GitLab**:
@@ -58,14 +59,10 @@ pip install -r requirements.txt
    GOOGLE_CLOUD_LOCATION=europe-west2  # or your preferred region
 
    # GitLab - Update for the MR you want to review
-   CI_PROJECT_PATH=group/project       # e.g., "mygroup/myproject"
-   CI_MERGE_REQUEST_IID=1              # MR IID to review
-   ```
-
-   **Or use generic variables** (works for both platforms):
-   ```bash
-   REPOSITORY=owner/repo           # Repository identifier
-   PR_NUMBER=1                     # PR/MR number
+   REPOSITORY=group/project            # e.g., "mygroup/myproject"
+   PR_NUMBER=1                         # MR IID to review
+   GITLAB_TOKEN=glpat-xxxxxxxxxxxx     # GitLab Personal Access Token
+   CI_SERVER_HOST=gitlab.com           # Optional: custom GitLab instance
    ```
 
 3. **Authenticate with Google Cloud:**
@@ -73,11 +70,11 @@ pip install -r requirements.txt
    gcloud auth application-default login
    ```
 
-4. **Authenticate with your Git platform:**
-   - GitHub: `gh auth login`
-   - GitLab: `glab auth login`
+4. **Set authentication tokens:**
+   - **GitHub**: Set `GH_TOKEN` in `.env` with a Personal Access Token (PAT) with `repo` scope
+   - **GitLab**: Set `GITLAB_TOKEN` in `.env` with a Personal Access Token (PAT) with `api` scope
 
-**Note**: Authentication tokens are handled automatically by CLI tools - no need to set tokens in `.env`.
+   **Note**: In CI/CD environments, these tokens are typically provided automatically (`GITHUB_TOKEN` in GitHub Actions, `CI_JOB_TOKEN` in GitLab CI).
 
 ## Usage
 
@@ -98,10 +95,11 @@ python -m pr_agent.main --provider gitlab
 
 **For GitHub:**
 1. Find a public PR to test with (or create one in your own repo)
-2. Update `.env` with the repository and PR number:
+2. Update `.env` with the repository, PR number, and token:
    ```bash
-   GITHUB_REPOSITORY=facebook/react
-   GITHUB_PR_NUMBER=28099
+   REPOSITORY=facebook/react
+   PR_NUMBER=28099
+   GH_TOKEN=ghp_your_token_here
    ```
 3. Run the agent:
    ```bash
@@ -111,10 +109,11 @@ python -m pr_agent.main --provider gitlab
 
 **For GitLab:**
 1. Find a public MR to test with (or create one in your own project)
-2. Update `.env` with the project path and MR IID:
+2. Update `.env` with the project path, MR IID, and token:
    ```bash
-   CI_PROJECT_PATH=gitlab-org/gitlab
-   CI_MERGE_REQUEST_IID=100
+   REPOSITORY=gitlab-org/gitlab
+   PR_NUMBER=100
+   GITLAB_TOKEN=glpat_your_token_here
    ```
 3. Run the agent:
    ```bash
@@ -220,19 +219,21 @@ See [docs/example-github-actions.yml](docs/example-github-actions.yml) for a com
    - `GOOGLE_CLOUD_PROJECT`: Your GCP project ID
    - `GOOGLE_CLOUD_LOCATION`: GCP region (e.g., `europe-west2`)
    - `GOOGLE_CLOUD_CREDENTIALS`: Your GCP service account JSON
-3. The workflow automatically uses `secrets.GITHUB_TOKEN` for GitHub API access
+   - `GH_TOKEN`: GitHub Personal Access Token (optional, can use `GITHUB_TOKEN`)
+3. The workflow uses either `secrets.GH_TOKEN` or `secrets.GITHUB_TOKEN` for GitHub API access
 
 **Usage in workflow:**
 
 ```yaml
 steps:
   - uses: darkin100/i-am-reviewed@v1.0
-    with:
-      github-token: ${{ secrets.GITHUB_TOKEN }}
-      pr-number: ${{ github.event.pull_request.number }}
-      google-cloud-project: ${{ secrets.GOOGLE_CLOUD_PROJECT }}
-      google-cloud-location: ${{ secrets.GOOGLE_CLOUD_LOCATION }}
-      google-cloud-credentials: ${{ secrets.GOOGLE_CLOUD_CREDENTIALS }}
+    env:
+      REPOSITORY: ${{ github.repository }}
+      PR_NUMBER: ${{ github.event.pull_request.number }}
+      GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      GOOGLE_CLOUD_PROJECT: ${{ secrets.GOOGLE_CLOUD_PROJECT }}
+      GOOGLE_CLOUD_LOCATION: ${{ secrets.GOOGLE_CLOUD_LOCATION }}
+      GOOGLE_CLOUD_CREDENTIALS_JSON: ${{ secrets.GOOGLE_CLOUD_CREDENTIALS }}
 ```
 
 ### GitLab CI
@@ -246,7 +247,8 @@ See [docs/example-gitlab-ci.yml](docs/example-gitlab-ci.yml) for a complete exam
    - `GOOGLE_CLOUD_PROJECT`: Your GCP project ID
    - `GOOGLE_CLOUD_LOCATION`: GCP region (e.g., `europe-west2`)
    - `GOOGLE_CLOUD_CREDENTIALS`: Your GCP service account JSON (as File type)
-3. The pipeline automatically uses `CI_JOB_TOKEN` for GitLab API access (no additional token required)
+   - `GITLAB_TOKEN`: GitLab Personal Access Token (optional if using `CI_JOB_TOKEN`)
+3. The pipeline uses `GITLAB_TOKEN` for GitLab API access (set to `CI_JOB_TOKEN` or a PAT)
 
 **Usage in .gitlab-ci.yml:**
 
@@ -257,6 +259,8 @@ review_merge_request:
   rules:
     - if: $CI_PIPELINE_SOURCE == "merge_request_event"
   variables:
+    REPOSITORY: $CI_PROJECT_PATH
+    PR_NUMBER: $CI_MERGE_REQUEST_IID
     GOOGLE_CLOUD_PROJECT: $GOOGLE_CLOUD_PROJECT
     GOOGLE_CLOUD_LOCATION: $GOOGLE_CLOUD_LOCATION
     GOOGLE_CLOUD_CREDENTIALS_JSON: $GOOGLE_CLOUD_CREDENTIALS

@@ -35,14 +35,26 @@ docker build -t pr-review-agent:latest .
 3. **Run the container:**
 
 Whilst you can run the container locally, you need to specify the PR/MR that you want to process
+
+   **For GitHub:**
    ```bash
    docker run --rm \
-     -e GITHUB_REPOSITORY=owner/repo \
-     -e GITHUB_PR_NUMBER=123 \
+     -e REPOSITORY=owner/repo \
+     -e PR_NUMBER=123 \
      -e GOOGLE_CLOUD_PROJECT=your-project-id \
      -e GOOGLE_CLOUD_LOCATION=europe-west2 \
-     -v ~/.config/gcloud:/root/.config/gcloud:ro \
-     -v ~/.config/gh:/root/.config/gh:ro \
+     -e GH_TOKEN=your-github-token \
+     pr-review-agent:latest
+   ```
+
+   **For GitLab:**
+   ```bash
+   docker run --rm \
+     -e REPOSITORY=group/project \
+     -e PR_NUMBER=123 \
+     -e GOOGLE_CLOUD_PROJECT=your-project-id \
+     -e GOOGLE_CLOUD_LOCATION=europe-west2 \
+     -e GITLAB_TOKEN=your-gitlab-token \
      pr-review-agent:latest
    ```
 
@@ -55,15 +67,6 @@ docker tag pr-review-agent:latest gcr.io/YOUR-PROJECT-ID/pr-review-agent:latest
 
 # Push to GCR
 docker push gcr.io/YOUR-PROJECT-ID/pr-review-agent:latest
-```
-
-**Docker Hub:**
-```bash
-# Tag the image
-docker tag pr-review-agent:latest YOUR-USERNAME/pr-review-agent:latest
-
-# Push to Docker Hub
-docker push YOUR-USERNAME/pr-review-agent:latest
 ```
 
 ---
@@ -92,8 +95,9 @@ Add the following secrets:
 | `SERVICE_ACCOUNT` | Email of the service account | `pr-reviewer@your-project.iam.gserviceaccount.com` |
 | `GOOGLE_CLOUD_PROJECT` | Your GCP project ID | `my-gcp-project` |
 | `GOOGLE_CLOUD_LOCATION` | Vertex AI location | `europe-west2` |
+| `GH_TOKEN` | GitHub Personal Access Token (optional if using GITHUB_TOKEN) | `ghp_xxxxxxxxxxxx` |
 
-**Note:** `GITHUB_TOKEN` is automatically provided by GitHub Actions and doesn't need to be added as a secret.
+**Note:** The workflow can use either `secrets.GITHUB_TOKEN` (automatically provided, limited permissions) or `secrets.GH_TOKEN` (personal access token with broader permissions) depending on your needs.
 
 ### Step 3: Enable the Workflow
 
@@ -206,12 +210,11 @@ Use this value for the `WORKLOAD_IDENTITY_PROVIDER` secret in GitHub.
 2. **Test on a sample PR:**
    ```bash
    docker run --rm \
-     -e GITHUB_REPOSITORY=darkin100/i-am-reviewed \
-     -e GITHUB_PR_NUMBER=1 \
+     -e REPOSITORY=darkin100/i-am-reviewed \
+     -e PR_NUMBER=1 \
      -e GOOGLE_CLOUD_PROJECT=your-project-id \
      -e GOOGLE_CLOUD_LOCATION=europe-west2 \
-     -v ~/.config/gcloud:/root/.config/gcloud:ro \
-     -v ~/.config/gh:/root/.config/gh:ro \
+     -e GH_TOKEN=your-github-token \
      pr-review-agent:latest
    ```
 
@@ -236,155 +239,3 @@ Use this value for the `WORKLOAD_IDENTITY_PROVIDER` secret in GitHub.
 4. **Verify the review:**
    - Once complete, the PR should have a new comment with the AI review
    - The comment should include assessment, findings, and positive observations
-
----
-
-## Troubleshooting
-
-### Common Issues
-
-#### 1. "Error: GITHUB_REPOSITORY environment variable not set"
-**Solution:** Ensure the environment variable is properly passed to the Docker container or set in the workflow file.
-
-#### 2. "Error: Workload Identity Federation authentication failed"
-**Possible causes:**
-- Incorrect `WORKLOAD_IDENTITY_PROVIDER` value
-- Service account doesn't have proper permissions
-- `attribute-condition` in provider doesn't match your repository
-
-**Solution:**
-- Verify the provider resource name
-- Check service account IAM bindings
-- Review the attribute condition in the Workload Identity Provider
-
-#### 3. "Error: GitHub CLI command failed"
-**Possible causes:**
-- GitHub token not configured
-- Insufficient permissions
-
-**Solution:**
-- Verify `GITHUB_TOKEN` is passed correctly
-- Check that the workflow has `pull-requests: write` permission
-
-#### 4. "Error: No response from model"
-**Possible causes:**
-- Vertex AI API not enabled
-- Service account lacks `aiplatform.user` role
-- Location not supported
-
-**Solution:**
-```bash
-# Enable Vertex AI API
-gcloud services enable aiplatform.googleapis.com
-
-# Grant role
-gcloud projects add-iam-policy-binding $PROJECT_ID \
-    --member="serviceAccount:pr-reviewer@${PROJECT_ID}.iam.gserviceaccount.com" \
-    --role="roles/aiplatform.user"
-```
-
-### Debug Mode
-
-To enable verbose logging, modify the Docker run command:
-
-```bash
-docker run --rm \
-  -e GITHUB_REPOSITORY=... \
-  -e GITHUB_PR_NUMBER=... \
-  -e GOOGLE_CLOUD_PROJECT=... \
-  -e GOOGLE_CLOUD_LOCATION=... \
-  -e PYTHONUNBUFFERED=1 \
-  -v ~/.config/gcloud:/root/.config/gcloud:ro \
-  -v ~/.config/gh:/root/.config/gh:ro \
-  pr-review-agent:latest
-```
-
-### Viewing GitHub Actions Logs
-
-1. Go to your repository on GitHub
-2. Click the **Actions** tab
-3. Select the workflow run
-4. Click on the "Review PR with AI" job
-5. Expand the steps to view detailed logs
-
----
-
-## Additional Configuration
-
-### Customizing the Review Prompt
-
-Edit `pr_agent/main.py` to customize:
-- The review system instruction (lines 70-85)
-- The review prompt format (lines 46-60)
-- Temperature and other model parameters (lines 87-93)
-
-### Using a Different Model
-
-To use a different Gemini model, edit the `model` parameter in `pr_agent/main.py:88`:
-
-```python
-response = client.models.generate_content(
-    model='gemini-1.5-pro',  # Change to different model
-    contents=prompt,
-    ...
-)
-```
-
-Available models:
-- `gemini-2.5-flash` (default, fast and cost-effective)
-- `gemini-1.5-pro` (more capable, higher cost)
-- `gemini-1.5-flash` (faster, lower cost)
-
----
-
-## Security Considerations
-
-1. **Never commit service account keys** - Use Workload Identity Federation instead
-2. **Use least privilege** - Grant only necessary IAM roles
-3. **Restrict repository access** - Use `attribute-condition` in Workload Identity Provider
-4. **Rotate credentials** - Periodically review and rotate service accounts
-5. **Monitor usage** - Track API calls and review logs for suspicious activity
-
----
-
-## Cost Optimization
-
-**Vertex AI Pricing:**
-- Gemini 2.5 Flash is cost-effective for PR reviews
-- Consider setting up budget alerts in GCP
-- Monitor token usage in Google Cloud Console
-
-**GitHub Actions:**
-- Free for public repositories
-- 2,000 minutes/month for private repositories (free tier)
-- Consider caching Docker layers to speed up builds
-
----
-
-## Support
-
-For issues or questions:
-1. Check the [Troubleshooting](#troubleshooting) section
-2. Review GitHub Actions workflow logs
-3. Check Google Cloud logs in Cloud Console
-4. Open an issue in the repository
-
-## Environment Variables
-
-  | Variable                       | Read/Write | Files                      | Required  | Purpose                           |
-  |--------------------------------|------------|----------------------------|-----------|---------------------------------------|
-  | GOOGLE_CLOUD_CREDENTIALS_JSON  | Read       | main.py:18                 | Optional  | Service  account JSON for CI/CD        |
-  | GOOGLE_APPLICATION_CREDENTIALS | Write      | main.py:32                 | -         | Set by code  (temp file path)          |
-  | GOOGLE_CLOUD_PROJECT           | Read       | main.py:185                | Yes       | GCP project ID                          |
-  | GOOGLE_CLOUD_LOCATION          | Read       | main.py:186                | Yes       | GCP region                          |
-  | REPOSITORY                     | Read       | main.py:51                 | Yes       | Generic repo  identifier               |
-  | PR_NUMBER                      | Read       | main.py:73                 | Yes       | Generic PR/MR  number  ${{github.event.pull_request.number}} $CI_MERGE_REQUEST_IID                |
-  | CI_SERVER_HOST                 | Read       | main.py:233, gitlab.py:148 | Optional  | GitLab  hostname (default: gitlab.com) |
-  | GITLAB_TOKEN                   | Read       | gitlab.py:146              | Yes      | GitLab PAT  (required for MR API)      |
-  | GH_TOKEN                       | Read       | github.py:119-122          | Yes (GitHub) | GitHub Personal   Access Token for CLI authentication          |
-  
-  
-Notes:
-  - *Required in practice - code expects these but currently doesn't have fallback logic fully
-  implemented
-  - Yes* GITLAB_TOKEN is required for GitLab because CI_JOB_TOKEN has limited API access

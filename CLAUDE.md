@@ -31,9 +31,13 @@ For **GitHub**:
 GOOGLE_CLOUD_PROJECT=your-project-id
 GOOGLE_CLOUD_LOCATION=europe-west2
 
-# GitHub
-GITHUB_REPOSITORY=owner/repo  # e.g., "darkin100/i-am-reviewed"
-GITHUB_PR_NUMBER=1
+# GitHub (using generic variables)
+REPOSITORY=owner/repo           # e.g., "darkin100/i-am-reviewed"
+PR_NUMBER=1                     # PR number to review
+GH_TOKEN=ghp_xxxxxxxxxxxx       # GitHub Personal Access Token
+
+# Optional: Google Cloud credentials for CI/CD
+# GOOGLE_CLOUD_CREDENTIALS_JSON=<service-account-json>
 ```
 
 For **GitLab**:
@@ -42,18 +46,20 @@ For **GitLab**:
 GOOGLE_CLOUD_PROJECT=your-project-id
 GOOGLE_CLOUD_LOCATION=europe-west2
 
-# GitLab
-CI_PROJECT_PATH=group/project  # e.g., "mygroup/myproject"
-CI_MERGE_REQUEST_IID=1
+# GitLab (using generic variables)
+REPOSITORY=group/project        # e.g., "mygroup/myproject"
+PR_NUMBER=1                     # MR IID to review
+GITLAB_TOKEN=glpat-xxxxxxxxxxxx # GitLab Personal Access Token
+CI_SERVER_HOST=gitlab.com       # Optional: custom GitLab instance
+
+# Optional: Google Cloud credentials for CI/CD
+# GOOGLE_CLOUD_CREDENTIALS_JSON=<service-account-json>
 ```
 
-**Or use generic variables** (works for both):
-```bash
-REPOSITORY=owner/repo
-PR_NUMBER=1
-```
-
-**Note:** CLI authentication is handled via `gh auth login` (GitHub) or `glab auth login` (GitLab) - no tokens needed in `.env` if already authenticated.
+**Note:**
+- `GH_TOKEN` is required for GitHub (use Personal Access Token with `repo` scope)
+- `GITLAB_TOKEN` is required for GitLab (use Personal Access Token with `api` scope)
+- In CI/CD, these tokens may be automatically provided (`GITHUB_TOKEN`, `CI_JOB_TOKEN`)
 
 ## Architecture
 
@@ -165,14 +171,13 @@ This approach is simpler for one-shot tasks like PR reviews compared to using th
 1. **Authentication**: Requires both GCP and Git platform authentication
    ```bash
    gcloud auth application-default login  # GCP
-   gh auth login                          # GitHub
-   glab auth login                        # GitLab
+   # Set GH_TOKEN or GITLAB_TOKEN in .env file
    ```
 
 2. **Platform CLI Tools**: The agent uses CLI commands via subprocess
-   - **GitHub**: Uses `gh` CLI - check with `gh auth status`
-   - **GitLab**: Uses `glab` CLI - check with `glab auth status`
-   - Ensure the appropriate CLI tool is installed and authenticated
+   - **GitHub**: Uses `gh` CLI - requires `GH_TOKEN` environment variable
+   - **GitLab**: Uses `glab` CLI - requires `GITLAB_TOKEN` environment variable
+   - Ensure the appropriate CLI tool is installed
 
 3. **Command-line Arguments**: The `--provider` flag is required
    - Always specify either `--provider github` or `--provider gitlab`
@@ -181,7 +186,12 @@ This approach is simpler for one-shot tasks like PR reviews compared to using th
 4. **Environment Variables**: All configuration is via `.env` file
    - See `pr_agent/.env.example` for template
    - `.env` is gitignored to protect credentials
-   - Use platform-specific or generic variable names
+   - **Required variables**:
+     - `REPOSITORY` (or `GITHUB_REPOSITORY`/`CI_PROJECT_PATH`)
+     - `PR_NUMBER` (or `GITHUB_PR_NUMBER`/`CI_MERGE_REQUEST_IID`)
+     - `GH_TOKEN` (for GitHub) or `GITLAB_TOKEN` (for GitLab)
+     - `GOOGLE_CLOUD_PROJECT`
+     - `GOOGLE_CLOUD_LOCATION`
 
 5. **Docker Images**: Two separate Docker images are built:
    - `Dockerfile.Github` - Includes `gh` CLI, sets `--provider github`
