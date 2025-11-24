@@ -125,6 +125,7 @@ class GitHubPlatform(GitPlatform):
 
         Checks for repository identifier and PR number, using either:
         - GitHub Actions context: GITHUB_EVENT_PATH (can extract PR number)
+        - GitHub authentication: GH_TOKEN (required for API access)
 
         Returns:
             List of missing environment variable names (empty list if all present)
@@ -137,5 +138,11 @@ class GitHubPlatform(GitPlatform):
         # PR number can come from generic var, GitHub-specific var, or event file
         if not github_event_path:
             missing_vars.append('PR_NUMBER, or GITHUB_EVENT_PATH')
+
+        # Check authentication token
+        gh_token = os.getenv('GH_TOKEN')
+
+        if not gh_token:
+            missing_vars.append('GH_TOKEN')
 
         return missing_vars
