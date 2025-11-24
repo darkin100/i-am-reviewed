@@ -369,7 +369,7 @@ For issues or questions:
 3. Check Google Cloud logs in Cloud Console
 4. Open an issue in the repository
 
-Summary Table
+## Environment Variables
 
   | Variable                       | Read/Write | Files                      | Required  | Purpose                           |
   |--------------------------------|------------|----------------------------|-----------|---------------------------------------|
