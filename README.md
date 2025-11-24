@@ -230,7 +230,6 @@ steps:
   - uses: darkin100/i-am-reviewed@v1.0
     with:
       github-token: ${{ secrets.GITHUB_TOKEN }}
-      repository: ${{ github.repository }}
       pr-number: ${{ github.event.pull_request.number }}
       google-cloud-project: ${{ secrets.GOOGLE_CLOUD_PROJECT }}
       google-cloud-location: ${{ secrets.GOOGLE_CLOUD_LOCATION }}
