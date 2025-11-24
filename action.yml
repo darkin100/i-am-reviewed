@@ -32,7 +32,7 @@ runs:
   image: 'docker://europe-west2-docker.pkg.dev/iamreleased/docker-images/pr-review-agent-github:latest'
   env:
     GH_TOKEN: ${{ inputs.github-token }}
-    GITHUB_REPOSITORY: ${{ inputs.repository }}
+    REPOSITORY: ${{ inputs.repository }}
     PR_NUMBER: ${{ inputs.pr-number }}
     GITHUB_ACTIONS: 'true'
     GOOGLE_CLOUD_PROJECT: ${{ inputs.google-cloud-project }}
