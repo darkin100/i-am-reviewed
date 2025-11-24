@@ -386,3 +386,8 @@ Summary Table
   | CI_JOB_TOKEN                   | Read       | gitlab.py:147              | Optional  | GitLab CI  token (fallback)            |
   | CI_SERVER_PROTOCOL             | Read       | gitlab.py:149              | Optional  | http/https  (default: https)           |
   | CI_SERVER_URL                  | Read       | gitlab.py:150              | Optional  | Full GitLab  URL                       |
+  
+Notes:
+  - *Required in practice - code expects these but currently doesn't have fallback logic fully
+  implemented
+  - Yes* GITLAB_TOKEN is required for GitLab because CI_JOB_TOKEN has limited API access
