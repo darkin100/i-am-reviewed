@@ -179,7 +179,6 @@ def main():
         # Get platform implementation
         try:
             platform = get_platform(args.provider)
-            platform_name = args.provider.lower()
             print(f"Using platform: {platform.get_platform_name()}")
         except ValueError as e:
             print(f"Error: {e}")
@@ -274,9 +273,9 @@ Format your response in markdown for GitHub."""
 
         # Generate platform-specific URL
         # TODO: Refactor this into the Gitlab/GitHub platform classes
-        if platform_name == 'github':
+        if platform.get_platform_name() == 'github':
             print(f"View at: https://github.com/{repo}/pull/{pr_number}")
-        elif platform_name == 'gitlab':
+        elif platform.get_platform_name() == 'gitlab':
             # GitLab URL structure: https://gitlab.com/group/project/-/merge_requests/{iid}
             gitlab_host = os.getenv('CI_SERVER_HOST', 'gitlab.com')
             print(f"View at: https://{gitlab_host}/{repo}/-/merge_requests/{pr_number}")
