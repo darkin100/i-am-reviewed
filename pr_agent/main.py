@@ -86,6 +86,51 @@ def get_pr_number() -> int:
         sys.exit(1)
 
 
+def ValidateEnvironmentVariables(platform=None):
+    """Validate all required environment variables.
+
+    Validates generic environment variables required by all platforms,
+    and delegates platform-specific validation to the platform instance.
+
+    Args:
+        platform: Platform instance to validate platform-specific variables (optional)
+
+    Raises:
+        SystemExit: If any required environment variables are missing
+    """
+    missing_vars = []
+
+    # Validate Google Cloud environment variables
+    if not os.getenv('GOOGLE_CLOUD_PROJECT'):
+        missing_vars.append('GOOGLE_CLOUD_PROJECT')
+
+    if not os.getenv('GOOGLE_CLOUD_LOCATION'):
+        missing_vars.append('GOOGLE_CLOUD_LOCATION')
+
+    # Validate generic environment variables
+    if not os.getenv('REPOSITORY'):
+        missing_vars.append('REPOSITORY (or platform-specific equivalent)')
+    if not os.getenv('PR_NUMBER'):
+        missing_vars.append('PR_NUMBER (or platform-specific equivalent)')
+
+
+    # If platform is provided, validate platform-specific variables
+    if platform:
+        platform_missing = platform.validate_environment_variables()
+        if platform_missing:
+            missing_vars.extend(platform_missing)
+
+    # Report all missing variables
+    if missing_vars:
+        print("Error: Missing required environment variables:")
+        for var in missing_vars:
+            print(f"  - {var}")
+        print("\nPlease set these variables in your .env file or environment.")
+        sys.exit(1)
+
+    print("✓ Environment variables validated successfully")
+
+
 def parse_arguments():
     """Parse command-line arguments.
 
@@ -131,9 +176,6 @@ def main():
         # Load environment variables (only needed for local development)
         load_dotenv()
 
-        # Set up Google Cloud authentication
-        setup_google_cloud_auth()
-
         # Get platform implementation
         try:
             platform = get_platform(args.provider)
@@ -142,6 +184,12 @@ def main():
         except ValueError as e:
             print(f"Error: {e}")
             sys.exit(1)
+
+        # Validate environment variables (generic + platform-specific)
+        ValidateEnvironmentVariables(platform)
+
+        # Set up Google Cloud authentication
+        setup_google_cloud_auth()
 
         # Set up platform authentication
         platform.setup_auth()

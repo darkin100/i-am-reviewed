@@ -3,7 +3,7 @@
 import os
 import json
 import subprocess
-from typing import Dict, Optional
+from typing import Dict, Optional, List
 
 from pr_agent.platforms.base import GitPlatform
 
@@ -119,3 +119,23 @@ class GitHubPlatform(GitPlatform):
         """
         # No authentication setup needed - gh CLI handles this automatically
         pass
+
+    def validate_environment_variables(self) -> List[str]:
+        """Validate GitHub-specific environment variables.
+
+        Checks for repository identifier and PR number, using either:
+        - GitHub Actions context: GITHUB_EVENT_PATH (can extract PR number)
+
+        Returns:
+            List of missing environment variable names (empty list if all present)
+        """
+        missing_vars = []
+
+        # Check PR number
+        github_event_path = os.getenv('GITHUB_EVENT_PATH')
+
+        # PR number can come from generic var, GitHub-specific var, or event file
+        if not github_event_path:
+            missing_vars.append('PR_NUMBER, or GITHUB_EVENT_PATH')
+
+        return missing_vars

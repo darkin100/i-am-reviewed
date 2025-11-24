@@ -3,7 +3,7 @@
 import os
 import json
 import subprocess
-from typing import Dict, Optional
+from typing import Dict, Optional, List
 
 from pr_agent.platforms.base import GitPlatform
 
@@ -192,3 +192,44 @@ class GitLabPlatform(GitPlatform):
         # Priority 3: Assume already authenticated locally
         else:
             print("Running locally - assuming glab is already authenticated via 'glab auth login'")
+
+    def validate_environment_variables(self) -> List[str]:
+        """Validate GitLab-specific environment variables.
+
+        Checks for repository identifier and MR number, using either:
+        - Generic variables: REPOSITORY, PR_NUMBER
+        - GitLab-specific: CI_PROJECT_PATH, CI_MERGE_REQUEST_IID (if generic not set)
+
+        Also validates GitLab authentication variables:
+        - GITLAB_TOKEN (preferred) or CI_JOB_TOKEN (in CI/CD)
+
+        Returns:
+            List of missing environment variable names (empty list if all present)
+        """
+        missing_vars = []
+
+        # Check repository identifier
+        repository = os.getenv('REPOSITORY')
+        ci_project_path = os.getenv('CI_PROJECT_PATH')
+
+        if not repository and not ci_project_path:
+            missing_vars.append('REPOSITORY or CI_PROJECT_PATH')
+
+        # Check MR number
+        pr_number = os.getenv('PR_NUMBER')
+        ci_merge_request_iid = os.getenv('CI_MERGE_REQUEST_IID')
+
+        if not pr_number and not ci_merge_request_iid:
+            missing_vars.append('PR_NUMBER or CI_MERGE_REQUEST_IID')
+
+        # Note: GITLAB_TOKEN and CI_JOB_TOKEN are optional for local dev
+        # (user may already be authenticated via 'glab auth login')
+        # But warn if neither is present in CI/CD context
+        gitlab_token = os.getenv('GITLAB_TOKEN')
+        ci_job_token = os.getenv('CI_JOB_TOKEN')
+
+        # If we're in CI (CI_MERGE_REQUEST_IID is set) and no tokens available
+        if ci_merge_request_iid and not gitlab_token and not ci_job_token:
+            missing_vars.append('GITLAB_TOKEN or CI_JOB_TOKEN (required in CI/CD)')
+
+        return missing_vars

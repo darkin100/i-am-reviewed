@@ -377,8 +377,8 @@ For issues or questions:
   | GOOGLE_APPLICATION_CREDENTIALS | Write      | main.py:32                 | -         | Set by code  (temp file path)          |
   | GOOGLE_CLOUD_PROJECT           | Read       | main.py:185                | Yes       | GCP project ID                          |
   | GOOGLE_CLOUD_LOCATION          | Read       | main.py:186                | Yes       | GCP region                          |
-  | REPOSITORY                     | Read       | main.py:51                 | Optional* | Generic repo  identifier               |
-  | PR_NUMBER                      | Read       | main.py:73                 | Optional* | Generic PR/MR  number                  |
+  | REPOSITORY                     | Read       | main.py:51                 | Yes       | Generic repo  identifier               |
+  | PR_NUMBER                      | Read       | main.py:73                 | Yes       | Generic PR/MR  number                  |
   | CI_SERVER_HOST                 | Read       | main.py:233, gitlab.py:148 | Optional  | GitLab  hostname (default: gitlab.com) |
   | GITHUB_EVENT_PATH              | Read       | github.py:97               | Optional  | GitHub Actions   event file             |
   | CI_MERGE_REQUEST_IID           | Read       | gitlab.py:124              | Optional  | GitLab MR  number                      |
