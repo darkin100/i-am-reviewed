@@ -144,7 +144,6 @@ The agent uses a **platform-agnostic architecture** with pluggable Git hosting p
   - `get_pr_info()` - Fetch PR/MR metadata
   - `get_pr_diff()` - Get diff of changes
   - `post_pr_comment()` - Post review comments
-  - `get_pr_number_from_event()` - Extract PR/MR number from CI/CD context
 
 - **`pr_agent/platforms/github.py`** - GitHub implementation using `gh` CLI
   - Uses GitHub CLI commands (`gh pr view`, `gh pr diff`, `gh pr comment`)

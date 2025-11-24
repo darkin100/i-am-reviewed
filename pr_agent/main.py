@@ -278,7 +278,7 @@ Format your response in markdown for GitHub."""
         elif platform.get_platform_name() == 'gitlab':
             # GitLab URL structure: https://gitlab.com/group/project/-/merge_requests/{iid}
             gitlab_host = os.getenv('CI_SERVER_HOST', 'gitlab.com')
-            print(f"View at: https://{gitlab_host}/{repo}/-/merge_requests/{pr_number}")
+            print(f"View at: https://gitlab.com/{repo}/-/merge_requests/{pr_number}")
 
     except subprocess.CalledProcessError as e:
         print(f"Error: CLI command failed: {e}")

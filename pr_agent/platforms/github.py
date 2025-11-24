@@ -85,30 +85,6 @@ class GitHubPlatform(GitPlatform):
             check=True
         )
 
-    def get_pr_number_from_event(self) -> Optional[int]:
-        """Extract PR number from GitHub Actions event context.
-
-        Reads the GITHUB_EVENT_PATH file which contains the webhook event payload
-        in GitHub Actions. The PR number is extracted from the 'pull_request' field.
-
-        Returns:
-            PR number if running in GitHub Actions with a PR event, None otherwise
-        """
-        event_path = os.getenv('GITHUB_EVENT_PATH')
-        if not event_path:
-            return None
-
-        try:
-            with open(event_path, 'r') as f:
-                event_data = json.load(f)
-                # Extract PR number from the event
-                if 'pull_request' in event_data:
-                    return event_data['pull_request']['number']
-        except (FileNotFoundError, json.JSONDecodeError, KeyError) as e:
-            print(f"Warning: Could not extract PR number from event: {e}")
-
-        return None
-
     def setup_auth(self) -> None:
         """Set up GitHub CLI authentication.
 
@@ -124,20 +100,12 @@ class GitHubPlatform(GitPlatform):
         """Validate GitHub-specific environment variables.
 
         Checks for repository identifier and PR number, using either:
-        - GitHub Actions context: GITHUB_EVENT_PATH (can extract PR number)
         - GitHub authentication: GH_TOKEN (required for API access)
 
         Returns:
             List of missing environment variable names (empty list if all present)
         """
         missing_vars = []
-
-        # Check PR number
-        github_event_path = os.getenv('GITHUB_EVENT_PATH')
-
-        # PR number can come from generic var, GitHub-specific var, or event file
-        if not github_event_path:
-            missing_vars.append('PR_NUMBER, or GITHUB_EVENT_PATH')
 
         # Check authentication token
         gh_token = os.getenv('GH_TOKEN')

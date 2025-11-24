@@ -64,7 +64,6 @@ PR_NUMBER=1
 - `get_pr_info(repo, pr_number)` - Fetch PR/MR metadata
 - `get_pr_diff(repo, pr_number)` - Get full diff
 - `post_pr_comment(repo, pr_number, body)` - Post review comment
-- `get_pr_number_from_event()` - Extract PR/MR number from CI/CD context
 
 **`pr_agent/platforms/github.py`** - GitHub implementation (`GitHubPlatform`):
 - Uses `gh` CLI commands (`gh pr view`, `gh pr diff`, `gh pr comment`)

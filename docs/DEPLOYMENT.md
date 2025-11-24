@@ -378,14 +378,11 @@ For issues or questions:
   | GOOGLE_CLOUD_PROJECT           | Read       | main.py:185                | Yes       | GCP project ID                          |
   | GOOGLE_CLOUD_LOCATION          | Read       | main.py:186                | Yes       | GCP region                          |
   | REPOSITORY                     | Read       | main.py:51                 | Yes       | Generic repo  identifier               |
-  | PR_NUMBER                      | Read       | main.py:73                 | Yes       | Generic PR/MR  number                  |
+  | PR_NUMBER                      | Read       | main.py:73                 | Yes       | Generic PR/MR  number  ${{github.event.pull_request.number}} $CI_MERGE_REQUEST_IID                |
   | CI_SERVER_HOST                 | Read       | main.py:233, gitlab.py:148 | Optional  | GitLab  hostname (default: gitlab.com) |
-  | GITHUB_EVENT_PATH              | Read       | github.py:97               | Optional  | GitHub Actions   event file             |
-  | CI_MERGE_REQUEST_IID           | Read       | gitlab.py:124              | Optional  | GitLab MR  number                      |
-  | GITLAB_TOKEN                   | Read       | gitlab.py:146              | Yes*      | GitLab PAT  (required for MR API)      |
-  | CI_JOB_TOKEN                   | Read       | gitlab.py:147              | Optional  | GitLab CI  token (fallback)            |
-  | CI_SERVER_PROTOCOL             | Read       | gitlab.py:149              | Optional  | http/https  (default: https)           |
-  | CI_SERVER_URL                  | Read       | gitlab.py:150              | Optional  | Full GitLab  URL                       |
+  | GITLAB_TOKEN                   | Read       | gitlab.py:146              | Yes      | GitLab PAT  (required for MR API)      |
+  | GH_TOKEN                       | Read       | github.py:119-122          | Yes (GitHub) | GitHub Personal   Access Token for CLI authentication          |
+  
   
 Notes:
   - *Required in practice - code expects these but currently doesn't have fallback logic fully

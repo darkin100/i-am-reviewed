@@ -67,27 +67,8 @@ class GitPlatform(ABC):
         pass
 
     @abstractmethod
-    def get_pr_number_from_event(self) -> Optional[int]:
-        """Extract PR/MR number from CI/CD environment context.
-
-        Each platform has different environment variables in their CI/CD systems:
-        - GitHub Actions: GITHUB_EVENT_PATH contains event JSON
-        - GitLab CI: CI_MERGE_REQUEST_IID contains MR number
-
-        Returns:
-            PR/MR number if running in CI/CD context, None otherwise
-        """
-        pass
-
-    @abstractmethod
     def setup_auth(self) -> None:
         """Set up authentication for the platform CLI tool.
-
-        Each platform may require different authentication setup:
-        - GitHub: Typically relies on gh auth login (done manually/locally)
-        - GitLab: Requires glab auth login with CI_JOB_TOKEN in CI/CD
-
-        This method should handle both CI/CD and local development scenarios.
 
         Raises:
             subprocess.CalledProcessError: If the auth command fails
