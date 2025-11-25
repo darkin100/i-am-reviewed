@@ -9,6 +9,7 @@ from dotenv import load_dotenv
 from google import genai
 
 from agent.platforms import get_platform
+from agent.utils import strip_markdown_wrapper
 
 
 def setup_google_cloud_auth():
@@ -264,6 +265,9 @@ Format your response in markdown for GitHub."""
         if not review_text:
             print("Error: No response from model")
             sys.exit(1)
+
+        # Clean up any markdown code block wrappers that the AI might have added
+        review_text = strip_markdown_wrapper(review_text)
 
         # Post review comment using platform abstraction
         print("Posting review comment to PR/MR...")
