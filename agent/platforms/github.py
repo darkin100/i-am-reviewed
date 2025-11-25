@@ -14,6 +14,30 @@ class GitHubPlatform(GitPlatform):
     This implementation uses the GitHub CLI (gh) to interact with GitHub's API.
     """
 
+    def __init__(self):
+        """Initialize GitHub platform with authentication state."""
+        super().__init__()
+        self._gh_token: Optional[str] = None
+        self._auth_method: Optional[str] = None
+
+    def _get_subprocess_env(self) -> Dict[str, str]:
+        """Get environment dict for subprocess calls.
+
+        Returns environment variables to pass to subprocess, including GH_TOKEN
+        when using token-based authentication.
+
+        Returns:
+            Dictionary of environment variables
+        """
+        # Start with current environment
+        env = os.environ.copy()
+
+        # Add GH_TOKEN if using token-based auth
+        if self._auth_method == 'token' and self._gh_token:
+            env['GH_TOKEN'] = self._gh_token
+
+        return env
+
     def get_pr_info(self, repo: str, pr_number: int) -> Dict:
         """Fetch PR metadata using GitHub CLI.
 
@@ -36,7 +60,8 @@ class GitHubPlatform(GitPlatform):
             cmd,
             capture_output=True,
             text=True,
-            check=True
+            check=True,
+            env=self._get_subprocess_env()
         )
 
         return json.loads(result.stdout)
@@ -60,7 +85,8 @@ class GitHubPlatform(GitPlatform):
             cmd,
             capture_output=True,
             text=True,
-            check=True
+            check=True,
+            env=self._get_subprocess_env()
         )
 
         return result.stdout
@@ -82,35 +108,65 @@ class GitHubPlatform(GitPlatform):
             cmd,
             capture_output=True,
             text=True,
-            check=True
+            check=True,
+            env=self._get_subprocess_env()
         )
 
     def setup_auth(self) -> None:
         """Set up GitHub CLI authentication.
 
-        GitHub CLI authentication is typically handled externally:
-        - Locally: via 'gh auth login'
+        Supports two authentication methods:
+        - CI/CD: Uses GH_TOKEN environment variable if available
+        - Local: Falls back to gh CLI's local authentication (via 'gh auth login')
 
-        This method is a no-op as gh CLI handles authentication automatically.
+        Raises:
+            RuntimeError: If neither authentication method is available
         """
-        # No authentication setup needed - gh CLI handles this automatically
-        pass
+        # Check if GH_TOKEN is available (CI mode)
+        gh_token = os.getenv('GH_TOKEN')
+
+        if gh_token:
+            self._gh_token = gh_token
+            self._auth_method = 'token'
+            print("✓ Using GH_TOKEN for authentication (CI mode)")
+            return
+
+        # Check if gh CLI is authenticated (local mode)
+        try:
+            result = subprocess.run(
+                ['gh', 'auth', 'status'],
+                capture_output=True,
+                text=True,
+                check=False
+            )
+
+            # gh auth status returns 0 if authenticated
+            if result.returncode == 0:
+                self._auth_method = 'cli'
+                print("✓ Using gh CLI local authentication (interactive mode)")
+                return
+        except FileNotFoundError:
+            raise RuntimeError(
+                "GitHub CLI (gh) is not installed. "
+                "Please install it from https://cli.github.com/"
+            )
+
+        # Neither authentication method available
+        raise RuntimeError(
+            "No GitHub authentication available. Please either:\n"
+            "  - Set GH_TOKEN environment variable (for CI/CD), or\n"
+            "  - Run 'gh auth login' (for local development)"
+        )
 
     def validate_environment_variables(self) -> List[str]:
         """Validate GitHub-specific environment variables.
 
-        Checks for repository identifier and PR number, using either:
-        - GitHub authentication: GH_TOKEN (required for API access)
+        Note: GH_TOKEN is optional. Authentication is validated by setup_auth() instead.
+        This method is kept for consistency with the base class but returns empty list.
 
         Returns:
-            List of missing environment variable names (empty list if all present)
+            List of missing environment variable names (empty list for GitHub)
         """
-        missing_vars = []
-
-        # Check authentication token
-        gh_token = os.getenv('GH_TOKEN')
-
-        if not gh_token:
-            missing_vars.append('GH_TOKEN')
-
-        return missing_vars
+        # No required environment variables for GitHub platform
+        # Authentication is handled by setup_auth() which checks both GH_TOKEN and gh CLI auth
+        return []
