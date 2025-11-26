@@ -227,6 +227,7 @@ Changes:
 Provide your code review."""
 
         # Get agent review using genai client directly
+        # Vertex AI in express mode
         print("Generating review with AI...")
         client = genai.Client(
             vertexai=True,
@@ -271,6 +272,7 @@ Format your response in markdown for GitHub."""
 
         # Post review comment using platform abstraction
         print("Posting review comment to PR/MR...")
+        print(f"--- Review Start ---\n{review_text}\n--- Review End ---")
         platform.post_pr_comment(repo, pr_number, review_text)
 
         print(f"✓ Review successfully posted to PR/MR #{pr_number}")
