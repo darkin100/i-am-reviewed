@@ -1,5 +1,4 @@
-# Google ADK and dependencies (already installed)
-google-adk==1.17.0
+# Google ADK and dependencies
 google-genai==1.47.0
 google-cloud-aiplatform==1.123.0
 
