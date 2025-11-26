@@ -4,6 +4,8 @@ A multi-platform PR review agent using Google ADK and Gemini 2.5 Flash to automa
 
 Supports both **GitHub** and **GitLab** through a platform-agnostic architecture.
 
+![PR Agent](excalidraw.png)
+
 ## Setup
 
 ### Prerequisites
@@ -135,5 +137,4 @@ View at: https://github.com/owner/repo/pull/123
 
 ## Documentation
 
-- [Google ADK Documentation](https://google.github.io/adk-docs/)
 - [Implementation Plan](docs/IMPLEMENTATION_PLAN.md)
