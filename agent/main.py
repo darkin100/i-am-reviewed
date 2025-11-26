@@ -227,6 +227,7 @@ Changes:
 Provide your code review."""
 
         # Get agent review using genai client directly
+        # Vertex AI in express mode
         print("Generating review with AI...")
         client = genai.Client(
             vertexai=True,
