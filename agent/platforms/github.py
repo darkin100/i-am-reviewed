@@ -3,6 +3,7 @@
 import os
 import json
 import subprocess
+import re
 from typing import Dict, Optional, List
 
 from agent.platforms.base import GitPlatform
@@ -31,6 +32,8 @@ class GitHubPlatform(GitPlatform):
         """
         # Start with current environment
         env = os.environ.copy()
+        env['NO_COLOR'] = '1'
+        env['CLICOLOR'] = '0'
 
         # Add GH_TOKEN if using token-based auth
         if self._auth_method == 'token' and self._gh_token:
@@ -64,7 +67,13 @@ class GitHubPlatform(GitPlatform):
             env=self._get_subprocess_env()
         )
 
-        return json.loads(result.stdout)
+        # Strip ANSI escape sequences
+        ansi_escape = re.compile(r'\x1B(?:[@-Z\\-_]|\[[0-?]*[ -/]*[@-~])')
+        clean_output = ansi_escape.sub('', result.stdout)
+        
+        print(f"  {clean_output}")
+
+        return json.loads(clean_output)
 
     def get_pr_diff(self, repo: str, pr_number: int) -> str:
         """Fetch PR diff using GitHub CLI.
