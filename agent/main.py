@@ -1,18 +1,24 @@
 """Main execution script for PR review agent."""
 
-import os
-import sys
-import subprocess
 import argparse
-import tempfile
 import asyncio
+import os
+import subprocess
+import sys
+import tempfile
+
 from dotenv import load_dotenv
 from google.adk.agents import LlmAgent
 from google.adk.runners import InMemoryRunner
 from google.genai import types
 
+from agent.logging_config import setup_logging, get_logger
 from agent.platforms import get_platform
 from agent.utils import strip_markdown_wrapper
+
+# Initialize logging first
+setup_logging()
+logger = get_logger(__name__)
 
 
 def setup_google_cloud_auth():
@@ -22,7 +28,7 @@ def setup_google_cloud_auth():
     credentials_json = os.getenv('GOOGLE_CLOUD_CREDENTIALS')
     if not credentials_json:
         # No credentials provided - may rely on other auth methods
-        print("Warning: No GOOGLE_CLOUD_CREDENTIALS found. Attempting to use default credentials.")
+        logger.warning("No GOOGLE_CLOUD_CREDENTIALS found, attempting to use default credentials")
         return
 
     # Write credentials to a temporary file
@@ -34,9 +40,9 @@ def setup_google_cloud_auth():
 
         # Set the environment variable
         os.environ['GOOGLE_APPLICATION_CREDENTIALS'] = credentials_path
-        print(f"Google Cloud credentials configured at: {credentials_path}")
+        logger.info("Google Cloud credentials configured", extra={"context": {"credentials_path": credentials_path}})
     except Exception as e:
-        print(f"Error setting up credentials: {e}")
+        logger.error("Error setting up credentials", exc_info=True)
         raise
 
 
@@ -79,14 +85,13 @@ def get_pr_number() -> int:
 
     # Validate and convert to integer
     if not pr_number_str:
-        print("Error: Could not determine PR/MR number from environment variables")
-        print(f"Set one of: PR_NUMBER")
+        logger.error("Could not determine PR/MR number from environment variables. Set PR_NUMBER")
         sys.exit(1)
 
     try:
         return int(pr_number_str)
     except ValueError:
-        print(f"Error: PR/MR number must be an integer, got: {pr_number_str}")
+        logger.error("PR/MR number must be an integer", extra={"context": {"received_value": pr_number_str}})
         sys.exit(1)
 
 
@@ -135,13 +140,10 @@ def ValidateEnvironmentVariables(platform=None):
 
     # Report all missing variables
     if missing_vars:
-        print("Error: Missing required environment variables:")
-        for var in missing_vars:
-            print(f"  - {var}")
-        print("\nPlease set these variables in your .env file or environment.")
+        logger.error("Missing required environment variables", extra={"context": {"missing_vars": missing_vars}})
         sys.exit(1)
 
-    print("✓ Environment variables validated successfully")
+    logger.info("Environment variables validated successfully")
 
 
 def parse_arguments():
@@ -251,9 +253,9 @@ def main():
         # Get platform implementation
         try:
             platform = get_platform(args.provider)
-            print(f"Using platform: {platform.get_platform_name()}")
+            logger.info("Platform selected", extra={"context": {"platform": platform.get_platform_name()}})
         except ValueError as e:
-            print(f"Error: {e}")
+            logger.error(f"Platform initialization failed: {e}")
             sys.exit(1)
 
         # Validate environment variables (generic + platform-specific)
@@ -267,18 +269,20 @@ def main():
 
         # Get repository identifier
         repo = get_repository_identifier()
-        print(f"Repository: {repo}")
+        logger.info("Repository identified", extra={"context": {"repository": repo}})
 
         # Get PR/MR number
         pr_number = get_pr_number()
-        print(f"Starting review for PR/MR #{pr_number} in {repo}...")
+        logger.info("Starting PR review", extra={"context": {"repository": repo, "pr_number": pr_number}})
 
         # Fetch PR/MR data using platform abstraction
-        print("Fetching PR/MR metadata...")
+        logger.info("Fetching PR/MR metadata")
         pr_info = platform.get_pr_info(repo, pr_number)
+        logger.debug("PR metadata fetched", extra={"context": {"pr_info": pr_info}})
 
-        print("Fetching PR/MR diff...")
+        logger.info("Fetching PR/MR diff")
         pr_diff = platform.get_pr_diff(repo, pr_number)
+        logger.debug("Full PR diff", extra={"context": {"diff_length": len(pr_diff), "diff": pr_diff}})
 
         # Create review prompt
         prompt = f"""Review this pull request:
@@ -298,42 +302,41 @@ Changes:
 Provide your code review."""
 
         # Get agent review using ADK Agent
-        print("Generating review with AI...")
+        logger.info("Generating review with AI")
+        logger.debug("LLM prompt", extra={"context": {"prompt": prompt}})
         review_text = asyncio.run(run_review_agent(prompt))
 
         if not review_text:
-            print("Error: No response from model")
+            logger.error("No response received from model")
             sys.exit(1)
+
+        logger.debug("LLM response received", extra={"context": {"response_length": len(review_text), "review_text": review_text}})
 
         # Clean up any markdown code block wrappers that the AI might have added
         review_text = strip_markdown_wrapper(review_text)
 
         # Post review comment using platform abstraction
-        print("Posting review comment to PR/MR...")
-        print(f"--- Review Start ---\n{review_text}\n--- Review End ---")
+        logger.info("Posting review comment to PR/MR")
+        logger.debug("Generated review content", extra={"context": {"review_text": review_text}})
         platform.post_pr_comment(repo, pr_number, review_text)
 
-        print(f"✓ Review successfully posted to PR/MR #{pr_number}")
+        logger.info("Review successfully posted", extra={"context": {"pr_number": pr_number}})
 
         # Generate platform-specific URL
         # TODO: Refactor this into the Gitlab/GitHub platform classes
         if platform.get_platform_name() == 'github':
-            print(f"View at: https://github.com/{repo}/pull/{pr_number}")
+            logger.info("Review URL", extra={"context": {"url": f"https://github.com/{repo}/pull/{pr_number}"}})
         elif platform.get_platform_name() == 'gitlab':
             # GitLab URL structure: https://gitlab.com/group/project/-/merge_requests/{iid}
             gitlab_host = os.getenv('CI_SERVER_HOST', 'gitlab.com')
-            print(f"View at: https://gitlab.com/{repo}/-/merge_requests/{pr_number}")
+            logger.info("Review URL", extra={"context": {"url": f"https://{gitlab_host}/{repo}/-/merge_requests/{pr_number}"}})
 
     except subprocess.CalledProcessError as e:
-        print(f"Error: CLI command failed: {e}")
-        print(f"stdout: {e.stdout}")
-        print(f"stderr: {e.stderr}")
+        logger.error("CLI command failed", extra={"context": {"error": str(e), "stdout": e.stdout, "stderr": e.stderr}}, exc_info=True)
         sys.exit(1)
 
     except Exception as e:
-        print(f"Error: {e}")
-        import traceback
-        traceback.print_exc()
+        logger.error(f"Unexpected error: {e}", exc_info=True)
         sys.exit(1)
 
 

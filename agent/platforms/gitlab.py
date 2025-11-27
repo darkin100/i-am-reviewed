@@ -1,11 +1,14 @@
 """GitLab platform implementation using GitLab CLI."""
 
-import os
 import json
+import os
 import subprocess
-from typing import Dict, Optional, List
+from typing import Dict, List, Optional
 
+from agent.logging_config import get_logger
 from agent.platforms.base import GitPlatform
+
+logger = get_logger(__name__)
 
 
 class GitLabPlatform(GitPlatform):
@@ -125,7 +128,7 @@ class GitLabPlatform(GitPlatform):
 
         # Priority 1: Use GITLAB_TOKEN (Personal Access Token) if available
         if gitlab_token:
-            print(f"Authenticating glab with GITLAB_TOKEN (PAT) for {ci_server_host}")
+            logger.info("Authenticating with GitLab", extra={"context": {"method": "GITLAB_TOKEN", "host": ci_server_host}})
 
             cmd = [
                 'glab', 'auth', 'login',
@@ -133,18 +136,18 @@ class GitLabPlatform(GitPlatform):
                 '--hostname', ci_server_host
             ]
 
-            result = subprocess.run(
+            subprocess.run(
                 cmd,
                 capture_output=True,
                 text=True,
                 check=True
             )
 
-            print("GitLab CLI authenticated successfully with PAT")
+            logger.info("GitLab CLI authenticated successfully", extra={"context": {"method": "PAT"}})
 
         # Priority 2: Assume already authenticated locally
         else:
-            print("Running locally - assuming glab is already authenticated via 'glab auth login'")
+            logger.info("Using existing glab authentication", extra={"context": {"mode": "local"}})
 
     def validate_environment_variables(self) -> List[str]:
         """Validate GitLab-specific environment variables.

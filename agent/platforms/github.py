@@ -1,12 +1,15 @@
 """GitHub platform implementation using GitHub CLI."""
 
-import os
 import json
-import subprocess
+import os
 import re
-from typing import Dict, Optional, List
+import subprocess
+from typing import Dict, List, Optional
 
+from agent.logging_config import get_logger
 from agent.platforms.base import GitPlatform
+
+logger = get_logger(__name__)
 
 
 class GitHubPlatform(GitPlatform):
@@ -70,10 +73,11 @@ class GitHubPlatform(GitPlatform):
         # Strip ANSI escape sequences
         ansi_escape = re.compile(r'\x1B(?:[@-Z\\-_]|\[[0-?]*[ -/]*[@-~])')
         clean_output = ansi_escape.sub('', result.stdout)
-        
-        print(f"  {clean_output}")
 
-        return json.loads(clean_output)
+        pr_data = json.loads(clean_output)
+        logger.debug("PR metadata response", extra={"context": {"metadata": pr_data}})
+
+        return pr_data
 
     def get_pr_diff(self, repo: str, pr_number: int) -> str:
         """Fetch PR diff using GitHub CLI.
@@ -137,7 +141,7 @@ class GitHubPlatform(GitPlatform):
         if gh_token:
             self._gh_token = gh_token
             self._auth_method = 'token'
-            print("✓ Using GH_TOKEN for authentication (CI mode)")
+            logger.info("GitHub authentication configured", extra={"context": {"method": "GH_TOKEN", "mode": "CI"}})
             return
 
         # Check if gh CLI is authenticated (local mode)
@@ -152,7 +156,7 @@ class GitHubPlatform(GitPlatform):
             # gh auth status returns 0 if authenticated
             if result.returncode == 0:
                 self._auth_method = 'cli'
-                print("✓ Using gh CLI local authentication (interactive mode)")
+                logger.info("GitHub authentication configured", extra={"context": {"method": "gh_cli", "mode": "interactive"}})
                 return
         except FileNotFoundError:
             raise RuntimeError(
