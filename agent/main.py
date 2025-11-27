@@ -253,9 +253,6 @@ def main():
         # Parse command-line arguments
         args = parse_arguments()
 
-        # Load environment variables (only needed for local development)
-        load_dotenv()
-
         # Get platform implementation
         try:
             platform = get_platform(args.provider)
@@ -264,8 +261,15 @@ def main():
             logger.error(f"Platform initialization failed: {e}")
             sys.exit(1)
 
+
+        # Load environment variables (only needed for local development)
+        load_dotenv()
+
         # Validate environment variables (generic + platform-specific)
         ValidateEnvironmentVariables(platform)
+
+        # Set up Google Cloud authentication
+        setup_google_cloud_auth()
 
         # Initialize tracing
         enable_cloud_trace = os.getenv('ENABLE_CLOUD_TRACE', 'true').lower() == 'true'
@@ -273,9 +277,6 @@ def main():
             project_id=os.getenv('GOOGLE_CLOUD_PROJECT'),
             enable_cloud_trace=enable_cloud_trace
         )
-
-        # Set up Google Cloud authentication
-        setup_google_cloud_auth()
 
         # Set up platform authentication
         platform.setup_auth()
