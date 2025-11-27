@@ -14,6 +14,7 @@ from google.genai import types
 
 from agent.logging_config import setup_logging, get_logger
 from agent.platforms import get_platform
+from agent.tracing_config import setup_tracing, get_tracer
 from agent.utils import strip_markdown_wrapper
 
 # Initialize logging first
@@ -225,20 +226,25 @@ async def run_review_agent(prompt: str) -> str:
     Returns:
         The review text from the agent
     """
-    agent = create_review_agent()
-    runner = InMemoryRunner(agent=agent, app_name='pr_review')
+    tracer = get_tracer()
+    with tracer.start_as_current_span("llm_agent_execution") as span:
+        span.set_attribute("prompt_length", len(prompt))
 
-    events = await runner.run_debug(prompt)
+        agent = create_review_agent()
+        runner = InMemoryRunner(agent=agent, app_name='pr_review')
 
-    # Extract text from the last event's content
-    # run_debug() returns a list of Event objects
-    for event in reversed(events):
-        if event.content and event.content.parts:
-            for part in event.content.parts:
-                if hasattr(part, 'text') and part.text:
-                    return part.text
+        events = await runner.run_debug(prompt)
 
-    return None
+        # Extract text from the last event's content
+        # run_debug() returns a list of Event objects
+        for event in reversed(events):
+            if event.content and event.content.parts:
+                for part in event.content.parts:
+                    if hasattr(part, 'text') and part.text:
+                        span.set_attribute("response_length", len(part.text))
+                        return part.text
+
+        return None
 
 
 def main():
@@ -261,6 +267,13 @@ def main():
         # Validate environment variables (generic + platform-specific)
         ValidateEnvironmentVariables(platform)
 
+        # Initialize tracing
+        enable_cloud_trace = os.getenv('ENABLE_CLOUD_TRACE', 'true').lower() == 'true'
+        tracer = setup_tracing(
+            project_id=os.getenv('GOOGLE_CLOUD_PROJECT'),
+            enable_cloud_trace=enable_cloud_trace
+        )
+
         # Set up Google Cloud authentication
         setup_google_cloud_auth()
 
@@ -275,17 +288,23 @@ def main():
         pr_number = get_pr_number()
         logger.info("Starting PR review", extra={"context": {"repository": repo, "pr_number": pr_number}})
 
-        # Fetch PR/MR data using platform abstraction
-        logger.info("Fetching PR/MR metadata")
-        pr_info = platform.get_pr_info(repo, pr_number)
-        logger.debug("PR metadata fetched", extra={"context": {"pr_info": pr_info}})
+        # Start the main workflow span
+        with tracer.start_as_current_span("pr_review_workflow") as root_span:
+            root_span.set_attribute("repository", repo)
+            root_span.set_attribute("pr_number", pr_number)
+            root_span.set_attribute("platform", platform.get_platform_name())
 
-        logger.info("Fetching PR/MR diff")
-        pr_diff = platform.get_pr_diff(repo, pr_number)
-        logger.debug("Full PR diff", extra={"context": {"diff_length": len(pr_diff), "diff": pr_diff}})
+            # Fetch PR/MR data using platform abstraction
+            logger.info("Fetching PR/MR metadata")
+            pr_info = platform.get_pr_info(repo, pr_number)
+            logger.debug("PR metadata fetched", extra={"context": {"pr_info": pr_info}})
 
-        # Create review prompt
-        prompt = f"""Review this pull request:
+            logger.info("Fetching PR/MR diff")
+            pr_diff = platform.get_pr_diff(repo, pr_number)
+            logger.debug("Full PR diff", extra={"context": {"diff_length": len(pr_diff), "diff": pr_diff}})
+
+            # Create review prompt
+            prompt = f"""Review this pull request:
 
 Title: {pr_info.get('title', 'N/A')}
 
@@ -301,35 +320,35 @@ Changes:
 
 Provide your code review."""
 
-        # Get agent review using ADK Agent
-        logger.info("Generating review with AI")
-        logger.debug("LLM prompt", extra={"context": {"prompt": prompt}})
-        review_text = asyncio.run(run_review_agent(prompt))
+            # Get agent review using ADK Agent
+            logger.info("Generating review with AI")
+            logger.debug("LLM prompt", extra={"context": {"prompt": prompt}})
+            review_text = asyncio.run(run_review_agent(prompt))
 
-        if not review_text:
-            logger.error("No response received from model")
-            sys.exit(1)
+            if not review_text:
+                logger.error("No response received from model")
+                sys.exit(1)
 
-        logger.debug("LLM response received", extra={"context": {"response_length": len(review_text), "review_text": review_text}})
+            logger.debug("LLM response received", extra={"context": {"response_length": len(review_text), "review_text": review_text}})
 
-        # Clean up any markdown code block wrappers that the AI might have added
-        review_text = strip_markdown_wrapper(review_text)
+            # Clean up any markdown code block wrappers that the AI might have added
+            review_text = strip_markdown_wrapper(review_text)
 
-        # Post review comment using platform abstraction
-        logger.info("Posting review comment to PR/MR")
-        logger.debug("Generated review content", extra={"context": {"review_text": review_text}})
-        platform.post_pr_comment(repo, pr_number, review_text)
+            # Post review comment using platform abstraction
+            logger.info("Posting review comment to PR/MR")
+            logger.debug("Generated review content", extra={"context": {"review_text": review_text}})
+            platform.post_pr_comment(repo, pr_number, review_text)
 
-        logger.info("Review successfully posted", extra={"context": {"pr_number": pr_number}})
+            logger.info("Review successfully posted", extra={"context": {"pr_number": pr_number}})
 
-        # Generate platform-specific URL
-        # TODO: Refactor this into the Gitlab/GitHub platform classes
-        if platform.get_platform_name() == 'github':
-            logger.info("Review URL", extra={"context": {"url": f"https://github.com/{repo}/pull/{pr_number}"}})
-        elif platform.get_platform_name() == 'gitlab':
-            # GitLab URL structure: https://gitlab.com/group/project/-/merge_requests/{iid}
-            gitlab_host = os.getenv('CI_SERVER_HOST', 'gitlab.com')
-            logger.info("Review URL", extra={"context": {"url": f"https://{gitlab_host}/{repo}/-/merge_requests/{pr_number}"}})
+            # Generate platform-specific URL
+            # TODO: Refactor this into the Gitlab/GitHub platform classes
+            if platform.get_platform_name() == 'github':
+                logger.info("Review URL", extra={"context": {"url": f"https://github.com/{repo}/pull/{pr_number}"}})
+            elif platform.get_platform_name() == 'gitlab':
+                # GitLab URL structure: https://gitlab.com/group/project/-/merge_requests/{iid}
+                gitlab_host = os.getenv('CI_SERVER_HOST', 'gitlab.com')
+                logger.info("Review URL", extra={"context": {"url": f"https://{gitlab_host}/{repo}/-/merge_requests/{pr_number}"}})
 
     except subprocess.CalledProcessError as e:
         logger.error("CLI command failed", extra={"context": {"error": str(e), "stdout": e.stdout, "stderr": e.stderr}}, exc_info=True)

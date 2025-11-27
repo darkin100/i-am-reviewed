@@ -7,6 +7,8 @@ import sys
 from datetime import datetime, timezone
 from typing import Any, Dict
 
+from opentelemetry import trace
+
 
 class JsonFormatter(logging.Formatter):
     """Custom JSON formatter for structured logging output."""
@@ -26,6 +28,13 @@ class JsonFormatter(logging.Formatter):
             "logger": record.name,
             "message": record.getMessage(),
         }
+
+        # Add trace context if available
+        span = trace.get_current_span()
+        if span and span.is_recording():
+            ctx = span.get_span_context()
+            log_entry["trace_id"] = format(ctx.trace_id, '032x')
+            log_entry["span_id"] = format(ctx.span_id, '016x')
 
         # Add context if provided via extra parameter
         if hasattr(record, 'context') and record.context:

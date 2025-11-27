@@ -7,6 +7,7 @@ from typing import Dict, List, Optional
 
 from agent.logging_config import get_logger
 from agent.platforms.base import GitPlatform
+from agent.tracing_config import traced
 
 logger = get_logger(__name__)
 
@@ -17,6 +18,7 @@ class GitLabPlatform(GitPlatform):
     This implementation uses the GitLab CLI (glab) to interact with GitLab's API.
     """
 
+    @traced("gitlab.get_pr_info")
     def get_pr_info(self, repo: str, pr_number: int) -> Dict:
         """Fetch MR metadata using GitLab CLI.
 
@@ -62,6 +64,7 @@ class GitLabPlatform(GitPlatform):
             'baseRefName': mr_data.get('target_branch', '')
         }
 
+    @traced("gitlab.get_pr_diff")
     def get_pr_diff(self, repo: str, pr_number: int) -> str:
         """Fetch MR diff using GitLab CLI.
 
@@ -89,6 +92,7 @@ class GitLabPlatform(GitPlatform):
 
         return result.stdout
 
+    @traced("gitlab.post_pr_comment")
     def post_pr_comment(self, repo: str, pr_number: int, body: str) -> None:
         """Post a comment on the MR using GitLab CLI.
 

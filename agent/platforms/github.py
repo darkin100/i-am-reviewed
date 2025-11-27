@@ -8,6 +8,7 @@ from typing import Dict, List, Optional
 
 from agent.logging_config import get_logger
 from agent.platforms.base import GitPlatform
+from agent.tracing_config import traced
 
 logger = get_logger(__name__)
 
@@ -44,6 +45,7 @@ class GitHubPlatform(GitPlatform):
 
         return env
 
+    @traced("github.get_pr_info")
     def get_pr_info(self, repo: str, pr_number: int) -> Dict:
         """Fetch PR metadata using GitHub CLI.
 
@@ -79,6 +81,7 @@ class GitHubPlatform(GitPlatform):
 
         return pr_data
 
+    @traced("github.get_pr_diff")
     def get_pr_diff(self, repo: str, pr_number: int) -> str:
         """Fetch PR diff using GitHub CLI.
 
@@ -104,6 +107,7 @@ class GitHubPlatform(GitPlatform):
 
         return result.stdout
 
+    @traced("github.post_pr_comment")
     def post_pr_comment(self, repo: str, pr_number: int, body: str) -> None:
         """Post a comment on the PR using GitHub CLI.
 
