@@ -5,8 +5,11 @@ import sys
 import subprocess
 import argparse
 import tempfile
+import asyncio
 from dotenv import load_dotenv
-from google import genai
+from google.adk.agents import LlmAgent
+from google.adk.runners import InMemoryRunner
+from google.genai import types
 
 from agent.platforms import get_platform
 from agent.utils import strip_markdown_wrapper
@@ -108,6 +111,15 @@ def ValidateEnvironmentVariables(platform=None):
     if not os.getenv('GOOGLE_CLOUD_LOCATION'):
         missing_vars.append('GOOGLE_CLOUD_LOCATION')
 
+    if not os.getenv('GOOGLE_CLOUD_AGENT_ENGINE_ENABLE_TELEMETRY'):
+        os.environ["GOOGLE_CLOUD_AGENT_ENGINE_ENABLE_TELEMETRY"] = "true"
+
+    if not os.getenv('OTEL_INSTRUMENTATION_GENAI_CAPTURE_MESSAGE_CONTENT'):
+        os.environ["OTEL_INSTRUMENTATION_GENAI_CAPTURE_MESSAGE_CONTENT"] = "true"
+
+    # Enable Vertex AI backend for ADK
+    os.environ["GOOGLE_GENAI_USE_VERTEXAI"] = "TRUE"
+
     # Validate generic environment variables
     if not os.getenv('REPOSITORY'):
         missing_vars.append('REPOSITORY (or platform-specific equivalent)')
@@ -168,6 +180,65 @@ Environment Variables:
     return parser.parse_args()
 
 
+def create_review_agent() -> LlmAgent:
+    """Create and configure the PR review agent.
+
+    Returns:
+        Configured LlmAgent for PR reviews
+    """
+    system_instruction = """You are a code reviewer analyzing a pull request.
+
+Review the PR for:
+- Obvious bugs or logic errors
+- Code quality issues (complexity, readability)
+- Potential security issues
+- Missing error handling
+- Best practice violations
+
+Provide a concise review summary with:
+1. Overall assessment (Looks good / Needs work / Has issues)
+2. Key findings (list 3-5 most important issues)
+3. Positive observations (what's done well)
+
+Keep feedback constructive and actionable.
+Format your response in markdown for GitHub."""
+
+    return LlmAgent(
+        model='gemini-2.5-flash',
+        name='pr_review_agent',
+        description='An AI agent that reviews pull requests for code quality, bugs, and best practices.',
+        instruction=system_instruction,
+        generate_content_config=types.GenerateContentConfig(
+            temperature=0.7
+        )
+    )
+
+
+async def run_review_agent(prompt: str) -> str:
+    """Run the PR review agent with the given prompt.
+
+    Args:
+        prompt: The PR details to review
+
+    Returns:
+        The review text from the agent
+    """
+    agent = create_review_agent()
+    runner = InMemoryRunner(agent=agent, app_name='pr_review')
+
+    events = await runner.run_debug(prompt)
+
+    # Extract text from the last event's content
+    # run_debug() returns a list of Event objects
+    for event in reversed(events):
+        if event.content and event.content.parts:
+            for part in event.content.parts:
+                if hasattr(part, 'text') and part.text:
+                    return part.text
+
+    return None
+
+
 def main():
     """Run PR review workflow."""
     try:
@@ -226,42 +297,9 @@ Changes:
 
 Provide your code review."""
 
-        # Get agent review using genai client directly
-        # Vertex AI in express mode
+        # Get agent review using ADK Agent
         print("Generating review with AI...")
-        client = genai.Client(
-            vertexai=True,
-            project=os.getenv('GOOGLE_CLOUD_PROJECT'),
-            location=os.getenv('GOOGLE_CLOUD_LOCATION')
-        )
-
-        system_instruction = """You are a code reviewer analyzing a pull request.
-
-Review the PR for:
-- Obvious bugs or logic errors
-- Code quality issues (complexity, readability)
-- Potential security issues
-- Missing error handling
-- Best practice violations
-
-Provide a concise review summary with:
-1. Overall assessment (Looks good / Needs work / Has issues)
-2. Key findings (list 3-5 most important issues)
-3. Positive observations (what's done well)
-
-Keep feedback constructive and actionable.
-Format your response in markdown for GitHub."""
-
-        response = client.models.generate_content(
-            model='gemini-2.5-flash',
-            contents=prompt,
-            config=genai.types.GenerateContentConfig(
-                system_instruction=system_instruction,
-                temperature=0.7
-            )
-        )
-
-        review_text = response.text
+        review_text = asyncio.run(run_review_agent(prompt))
 
         if not review_text:
             print("Error: No response from model")
