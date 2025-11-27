@@ -41,20 +41,19 @@ def strip_markdown_wrapper(text: str) -> str:
     # Strip leading/trailing whitespace to normalize
     text = text.strip()
 
-    # Pattern to match markdown code blocks at the start and end
-    # Matches: ```markdown or ``` at start, and ``` at end
-    # Uses DOTALL flag to match across newlines
-    pattern = r'^```(?:markdown)?\s*\n(.*)\n```\s*$'
+    # Pattern 1: Full wrapper with closing ```
+    # Matches: ```markdown or ``` at start, and ``` at end (with flexible whitespace)
+    pattern_full = r'^```(?:markdown|md)?\s*\n(.*?)(?:\n```\s*)?$'
 
-    match = re.match(pattern, text, re.DOTALL)
-
-    if match:
-        # Extract the content between the wrapper
-        content = match.group(1)
-
-        # Recursively check if there are more wrappers (handle nested cases)
-        # This handles cases where AI adds multiple wrappers
-        return strip_markdown_wrapper(content)
+    # Check if text starts with markdown code block opener
+    if re.match(r'^```(?:markdown|md)?\s*\n', text):
+        match = re.match(pattern_full, text, re.DOTALL)
+        if match:
+            content = match.group(1)
+            # Remove trailing ``` if present at end of content
+            content = re.sub(r'\n?```\s*$', '', content)
+            # Recursively check for more wrappers
+            return strip_markdown_wrapper(content.strip())
 
     # No wrapper found, return as-is
     return text

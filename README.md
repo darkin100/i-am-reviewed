@@ -134,7 +134,3 @@ Posting review comment to PR...
 ✓ Review successfully posted to PR #123
 View at: https://github.com/owner/repo/pull/123
 ```
-
-## Documentation
-
-- [Implementation Plan](docs/IMPLEMENTATION_PLAN.md)

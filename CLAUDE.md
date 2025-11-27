@@ -141,30 +141,26 @@ The agent will:
 
 ## Implementation Details
 
-The current implementation uses the **google.genai.Client** directly instead of the Google ADK Runner framework:
+The current implementation uses **Google ADK** with `LlmAgent` and `InMemoryRunner`:
 
 ```python
-from google import genai
+from google.adk.agents import LlmAgent
+from google.adk.runners import InMemoryRunner
 
-# Create Vertex AI client
-client = genai.Client(
-    vertexai=True,
-    project=os.getenv('GOOGLE_CLOUD_PROJECT'),
-    location=os.getenv('GOOGLE_CLOUD_LOCATION')
-)
-
-# Generate review
-response = client.models.generate_content(
+# Create the agent
+agent = LlmAgent(
     model='gemini-2.5-flash',
-    contents=prompt,
-    config=genai.types.GenerateContentConfig(
-        system_instruction=system_instruction,
-        temperature=0.7
-    )
+    name='pr_review_agent',
+    instruction=system_instruction,
+    generate_content_config=types.GenerateContentConfig(temperature=0.7)
 )
+
+# Run with InMemoryRunner
+runner = InMemoryRunner(agent=agent, app_name='pr_review')
+events = await runner.run_debug(prompt)
 ```
 
-This approach is simpler for one-shot tasks like PR reviews compared to using the full ADK Runner with session management.
+This approach provides async execution with event-based response handling.
 
 ## Key Considerations
 
@@ -197,6 +193,67 @@ This approach is simpler for one-shot tasks like PR reviews compared to using th
    - `Dockerfile.Github` - Includes `gh` CLI, sets `--provider github`
    - `Dockerfile.Gitlab` - Includes `glab` CLI, sets `--provider gitlab`
 
+## Tracing and Observability
+
+The agent includes **Cloud Trace** integration via OpenTelemetry for distributed tracing.
+
+### Configuration
+
+Set in `agent/.env`:
+```bash
+ENABLE_CLOUD_TRACE=true   # Set to 'false' for console output (local debugging)
+```
+
+### Trace Structure
+
+```
+pr_review_workflow (root span)
+├── github.get_pr_info / gitlab.get_pr_info
+├── github.get_pr_diff / gitlab.get_pr_diff
+├── llm_agent_execution
+│   └── [ADK automatic spans: invocation, agent_run, call_llm]
+└── github.post_pr_comment / gitlab.post_pr_comment
+```
+
+### Key Files
+
+- **`agent/tracing_config.py`** - Tracing setup and helpers:
+  - `setup_tracing(project_id, enable_cloud_trace)` - Initialize OpenTelemetry
+  - `get_tracer()` - Get global tracer instance
+  - `@traced(span_name)` - Decorator for method instrumentation
+  - `custom_span(name, attributes)` - Context manager for ad-hoc spans
+
+### Adding Custom Spans
+
+```python
+from agent.tracing_config import custom_span
+
+with custom_span("my_operation", {"key": "value"}):
+    # Your code here
+    pass
+```
+
+### Log Correlation
+
+Logs automatically include `trace_id` and `span_id` when running within a span:
+```json
+{
+  "timestamp": "2025-01-27T10:30:00Z",
+  "level": "INFO",
+  "message": "Fetching PR metadata",
+  "trace_id": "abc123...",
+  "span_id": "def456..."
+}
+```
+
+Click trace IDs in Cloud Logging to jump directly to Cloud Trace.
+
+### Viewing Traces
+
+Access traces in the GCP Console:
+```
+https://console.cloud.google.com/traces/list?project={GOOGLE_CLOUD_PROJECT}
+```
 
 ## External Documentation
 
