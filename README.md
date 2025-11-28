@@ -37,10 +37,10 @@ pip install -r requirements.txt
 
 1. **Copy the example environment file:**
    ```bash
-   cp agent/.env.example agent/.env
+   cp src/pr_agent/.env.example src/pr_agent/.env
    ```
 
-2. **Edit `agent/.env` with your settings:**
+2. **Edit `src/pr_agent/.env` with your settings:**
 
    For **GitHub**:
    ```bash
@@ -87,10 +87,10 @@ pip install -r requirements.txt
 source venv/bin/activate
 
 # Run for GitHub
-python -m agent.main --provider github
+python -m pr_agent.workflow --provider github
 
 # Or run for GitLab
-python -m agent.main --provider gitlab
+python -m pr_agent.workflow --provider gitlab
 ```
 
 ### Test with a Real PR/MR
@@ -105,7 +105,7 @@ python -m agent.main --provider gitlab
    ```
 3. Run the agent:
    ```bash
-   python -m agent.main --provider github
+   python -m pr_agent.workflow --provider github
    ```
 4. Check the PR for the review comment
 
@@ -119,7 +119,7 @@ python -m agent.main --provider gitlab
    ```
 3. Run the agent:
    ```bash
-   python -m agent.main --provider gitlab
+   python -m pr_agent.workflow --provider gitlab
    ```
 4. Check the MR for the review comment
 
@@ -134,3 +134,103 @@ Posting review comment to PR...
 ✓ Review successfully posted to PR #123
 View at: https://github.com/owner/repo/pull/123
 ```
+
+## Architecture
+
+The project has two modes of operation:
+
+| Mode | Entry Point | Purpose | Posts Comments |
+|------|-------------|---------|----------------|
+| **Production Workflow** | `python -m pr_agent.workflow` | Full automated PR review pipeline | Yes |
+| **ADK Dev UI** | `adk web src/adk_agents` | Interactive testing and prompt development | No (read-only) |
+
+### Production Workflow (`pr_agent.workflow`)
+
+The main agent located in `src/pr_agent/workflow.py` is designed for CI/CD integration and automated reviews. It:
+
+- Reads PR details from environment variables (`REPOSITORY`, `PR_NUMBER`)
+- Fetches PR metadata and diff using platform CLI tools
+- Generates a comprehensive code review using Gemini 2.5 Flash
+- **Posts the review as a comment** directly to the PR/MR
+- Includes full tracing and observability via Cloud Trace
+
+This is the workflow used in GitHub Actions and GitLab CI pipelines.
+
+### ADK Dev UI (Read-Only Testing)
+
+The ADK web interface (`src/adk_agents/pr_review/agent.py`) is a **read-only testing environment** for:
+
+- Testing and iterating on the system prompt
+- Validating tool functionality (`get_pr_info`, `get_pr_diff`)
+- Interactive exploration of PR content
+- Development and debugging without affecting real PRs
+
+**Key difference**: The Dev UI does not have access to the `post_pr_comment` tool, so reviews are only displayed in the chat interface and never posted to GitHub/GitLab.
+
+---
+
+## Interactive Web Interface (ADK Dev UI)
+
+Use the ADK Dev UI for testing the agent's system prompt and reviewing PRs interactively without posting comments.
+
+### Setup
+
+1. **Ensure environment variables are configured** in `src/pr_agent/.env`:
+   ```bash
+   GOOGLE_CLOUD_PROJECT=your-project-id
+   GOOGLE_CLOUD_LOCATION=europe-west2
+   # Plus GH_TOKEN or GITLAB_TOKEN as needed
+   ```
+
+2. **Authenticate with required services**:
+   ```bash
+   gcloud auth application-default login
+   gh auth login   # For GitHub PRs
+   glab auth login # For GitLab MRs
+   ```
+
+3. **Start the ADK web server**:
+   ```bash
+   source venv/bin/activate
+   adk web src/adk_agents
+   ```
+
+4. **Open the UI** in your browser at http://localhost:8000
+
+### How to Use
+
+In the web interface, you can ask the agent to review PRs using natural language:
+
+**By URL:**
+```
+Review https://github.com/owner/repo/pull/123
+```
+
+**By repository and number:**
+```
+Review PR #42 in owner/repo on GitHub
+```
+
+**For GitLab:**
+```
+Review MR !15 in mygroup/myproject on GitLab
+```
+
+### Available Tools (Dev UI)
+
+| Tool | Description |
+|------|-------------|
+| `get_pr_info` | Fetches PR/MR metadata (title, description, author, branches) |
+| `get_pr_diff` | Fetches the complete code diff |
+
+> **Note**: The `post_pr_comment` tool is intentionally excluded from the Dev UI to prevent accidental posts during testing.
+
+### When to Use Each Mode
+
+| Use Case | Recommended Mode |
+|----------|------------------|
+| CI/CD automated reviews | Production Workflow |
+| Testing system prompt changes | ADK Dev UI |
+| Debugging tool functionality | ADK Dev UI |
+| Reviewing a PR before posting | ADK Dev UI |
+| Manual one-off review with posting | Production Workflow |

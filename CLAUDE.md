@@ -23,7 +23,7 @@ The project uses a Python virtual environment located at `venv/`.
 source venv/bin/activate
 ```
 
-**Required environment variables (in `agent/.env`):**
+**Required environment variables (in `src/pr_agent/.env`):**
 
 For **GitHub**:
 ```bash
@@ -65,36 +65,48 @@ CI_SERVER_HOST=gitlab.com       # Optional: custom GitLab instance
 
 ### Platform Abstraction Layer
 
-**`agent/platforms/base.py`** - Abstract base class (`GitPlatform`):
+**`src/pr_agent/platforms/base.py`** - Abstract base class (`GitPlatform`):
 - Defines the interface all platform implementations must follow
 - `get_pr_info(repo, pr_number)` - Fetch PR/MR metadata
 - `get_pr_diff(repo, pr_number)` - Get full diff
 - `post_pr_comment(repo, pr_number, body)` - Post review comment
 
-**`agent/platforms/github.py`** - GitHub implementation (`GitHubPlatform`):
+**`src/pr_agent/platforms/github.py`** - GitHub implementation (`GitHubPlatform`):
 - Uses `gh` CLI commands (`gh pr view`, `gh pr diff`, `gh pr comment`)
 - Extracts PR number from `GITHUB_EVENT_PATH` in GitHub Actions
 
-**`agent/platforms/gitlab.py`** - GitLab implementation (`GitLabPlatform`):
+**`src/pr_agent/platforms/gitlab.py`** - GitLab implementation (`GitLabPlatform`):
 - Uses `glab` CLI commands (`glab mr view`, `glab mr diff`, `glab mr note`)
 - Extracts MR IID from `CI_MERGE_REQUEST_IID` in GitLab CI
 - Normalizes GitLab MR data to match GitHub's structure
 
-**`agent/platforms/__init__.py`** - Platform factory:
+**`src/pr_agent/platforms/__init__.py`** - Platform factory:
 - `get_platform(provider)` - Returns the appropriate platform instance
+
+### ADK Web Interface
+
+**`src/adk_agents/pr_review/agent.py`** - ADK agent definition:
+- Exports `root_agent` for `adk web src/adk_agents` discovery
+- Configures interactive instruction for chat-based PR review
+- Registers `get_pr_info` and `get_pr_diff` as tools
+
+**`src/pr_agent/tools.py`** - ADK tool functions:
+- `get_pr_info(platform, repo, pr_number)` - Fetch PR/MR metadata
+- `get_pr_diff(platform, repo, pr_number)` - Fetch code diff
+- Wraps platform classes with error handling and caching
+
+**`src/pr_agent/config.py`** - Shared configuration:
+- `setup_environment()` - Load .env and set ADK defaults
+- `setup_google_cloud_auth()` - Handle GCP credentials
 
 ### Main Application
 
-**`agent/main.py`** - Platform-agnostic main execution script:
+**`src/pr_agent/workflow.py`** - Platform-agnostic main execution script:
 - Parses command-line arguments (`--provider github` or `--provider gitlab`)
 - Uses platform factory to get appropriate implementation
 - Fetches PR/MR data through platform abstraction
 - Creates Gemini client and generates review
 - Posts review comment through platform abstraction
-
-**`agent/reviewer.py`** - (Legacy, not currently used)
-- Originally defined ADK Agent configuration
-- Current implementation uses `google.genai.Client` directly instead
 
 ### Technology Stack
 
@@ -107,9 +119,9 @@ CI_SERVER_HOST=gitlab.com       # Optional: custom GitLab instance
 
 ## How to Run the PR Review Agent
 
-1. **Configure environment variables** in `agent/.env`:
+1. **Configure environment variables** in `src/pr_agent/.env`:
    ```bash
-   cp agent/.env.example agent/.env
+   cp src/pr_agent/.env.example src/pr_agent/.env
    # Edit .env with your GCP project and target PR/MR details
    ```
 
@@ -127,10 +139,10 @@ CI_SERVER_HOST=gitlab.com       # Optional: custom GitLab instance
    source venv/bin/activate
 
    # For GitHub
-   python -m agent.main --provider github
+   python -m pr_agent.workflow --provider github
 
    # For GitLab
-   python -m agent.main --provider gitlab
+   python -m pr_agent.workflow --provider gitlab
    ```
 
 The agent will:
@@ -138,6 +150,49 @@ The agent will:
 - Send to Gemini 2.5 Flash for analysis
 - Generate a structured review
 - Post the review as a comment on the PR/MR
+
+## Running with ADK Dev UI
+
+The agent can also be run interactively using ADK's web interface for development and testing:
+
+1. **Configure environment variables** in `src/pr_agent/.env`:
+   ```bash
+   GOOGLE_CLOUD_PROJECT=your-project-id
+   GOOGLE_CLOUD_LOCATION=europe-west2
+   # Plus GH_TOKEN or GITLAB_TOKEN as needed
+   ```
+
+2. **Authenticate**:
+   ```bash
+   gcloud auth application-default login
+   gh auth login   # For GitHub
+   glab auth login # For GitLab
+   ```
+
+3. **Run ADK web**:
+   ```bash
+   source venv/bin/activate
+   adk web src/adk_agents
+   ```
+
+4. **Access the UI** at http://localhost:8000
+
+### Interactive Usage
+
+In the dev UI, you can ask the agent to review PRs by providing:
+- Full URL: "Review https://github.com/owner/repo/pull/123"
+- Repo + number: "Review PR #42 in owner/repo on GitHub"
+
+The agent uses tools to:
+- `get_pr_info` - Fetch PR/MR metadata (title, description, author, branches)
+- `get_pr_diff` - Fetch the full code diff
+
+**Note:** Reviews are display-only in the dev UI - no comments are posted to the PR/MR.
+
+### Key Files for ADK Web
+
+- **`src/adk_agents/pr_review/agent.py`** - Defines `root_agent` with interactive tools
+- **`src/pr_agent/tools.py`** - Tool functions wrapping platform classes
 
 ## Implementation Details
 
@@ -180,7 +235,7 @@ This approach provides async execution with event-based response handling.
    - This determines which platform implementation to use
 
 4. **Environment Variables**: All configuration is via `.env` file
-   - See `agent/.env.example` for template
+   - See `src/pr_agent/.env.example` for template
    - `.env` is gitignored to protect credentials
    - **Required variables**:
      - `REPOSITORY` (or `GITHUB_REPOSITORY`/`CI_PROJECT_PATH`)
@@ -199,7 +254,7 @@ The agent includes **Cloud Trace** integration via OpenTelemetry for distributed
 
 ### Configuration
 
-Set in `agent/.env`:
+Set in `src/pr_agent/.env`:
 ```bash
 ENABLE_CLOUD_TRACE=true   # Set to 'false' for console output (local debugging)
 ```
@@ -217,7 +272,7 @@ pr_review_workflow (root span)
 
 ### Key Files
 
-- **`agent/tracing_config.py`** - Tracing setup and helpers:
+- **`src/pr_agent/tracing_config.py`** - Tracing setup and helpers:
   - `setup_tracing(project_id, enable_cloud_trace)` - Initialize OpenTelemetry
   - `get_tracer()` - Get global tracer instance
   - `@traced(span_name)` - Decorator for method instrumentation
@@ -226,7 +281,7 @@ pr_review_workflow (root span)
 ### Adding Custom Spans
 
 ```python
-from agent.tracing_config import custom_span
+from pr_agent.tracing_config import custom_span
 
 with custom_span("my_operation", {"key": "value"}):
     # Your code here

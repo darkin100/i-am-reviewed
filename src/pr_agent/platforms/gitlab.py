@@ -18,6 +18,30 @@ class GitLabPlatform(GitPlatform):
     This implementation uses the GitLab CLI (glab) to interact with GitLab's API.
     """
 
+    def __init__(self):
+        """Initialize GitLab platform with authentication state."""
+        super().__init__()
+        self._gitlab_token: Optional[str] = None
+        self._auth_method: Optional[str] = None
+
+    def _get_subprocess_env(self) -> Dict[str, str]:
+        """Get environment dict for subprocess calls.
+
+        Returns environment variables to pass to subprocess, including GITLAB_TOKEN
+        when using token-based authentication.
+
+        Returns:
+            Dictionary of environment variables
+        """
+        # Start with current environment
+        env = os.environ.copy()
+
+        # Add GITLAB_TOKEN if using token-based auth
+        if self._auth_method == 'token' and self._gitlab_token:
+            env['GITLAB_TOKEN'] = self._gitlab_token
+
+        return env
+
     @traced("gitlab.get_pr_info")
     def get_pr_info(self, repo: str, pr_number: int) -> Dict:
         """Fetch MR metadata using GitLab CLI.
@@ -47,7 +71,8 @@ class GitLabPlatform(GitPlatform):
             cmd,
             capture_output=True,
             text=True,
-            check=True
+            check=True,
+            env=self._get_subprocess_env()
         )
 
         # Parse GitLab MR data and normalize to GitHub-compatible format
@@ -87,7 +112,8 @@ class GitLabPlatform(GitPlatform):
             cmd,
             capture_output=True,
             text=True,
-            check=True
+            check=True,
+            env=self._get_subprocess_env()
         )
 
         return result.stdout
@@ -114,46 +140,57 @@ class GitLabPlatform(GitPlatform):
             cmd,
             capture_output=True,
             text=True,
-            check=True
+            check=True,
+            env=self._get_subprocess_env()
         )
 
     def setup_auth(self) -> None:
         """Set up GitLab CLI authentication.
 
-        Authentication priority:
-        1. GITLAB_TOKEN (Personal Access Token) - preferred for full API access
+        Supports two authentication methods:
+        - CI/CD: Uses GITLAB_TOKEN environment variable if available
+        - Local: Falls back to glab CLI's local authentication (via 'glab auth login')
+
+        Note: When using GITLAB_TOKEN, the token is passed via environment variable
+        rather than command-line argument for security (avoids exposure in process listings).
 
         Raises:
-            subprocess.CalledProcessError: If the glab auth command fails
+            RuntimeError: If neither authentication method is available
         """
-        # Get environment variables
+        # Check if GITLAB_TOKEN is available (CI mode)
         gitlab_token = os.getenv('GITLAB_TOKEN')
 
-        if not gitlab_token:
-            raise Exception('GITLAB_TOKEN is required for authentication with GitLab.')
-
-        ci_server_host = os.getenv('CI_SERVER_HOST', 'gitlab.com')
-
-        # Priority 1: Use GITLAB_TOKEN (Personal Access Token) if available
         if gitlab_token:
-            logger.info("Authenticating with GitLab", extra={"context": {"method": "GITLAB_TOKEN", "host": ci_server_host}})
+            self._gitlab_token = gitlab_token
+            self._auth_method = 'token'
+            ci_server_host = os.getenv('CI_SERVER_HOST', 'gitlab.com')
+            logger.info("GitLab authentication configured", extra={"context": {"method": "GITLAB_TOKEN", "mode": "CI", "host": ci_server_host}})
+            return
 
-            cmd = [
-                'glab', 'auth', 'login',
-                '--token', gitlab_token,
-                '--hostname', ci_server_host
-            ]
-
-            subprocess.run(
-                cmd,
+        # Check if glab CLI is authenticated (local mode)
+        try:
+            result = subprocess.run(
+                ['glab', 'auth', 'status'],
                 capture_output=True,
                 text=True,
-                check=True
+                check=False
             )
 
-            logger.info("GitLab CLI authenticated successfully", extra={"context": {"method": "PAT"}})
+            # glab auth status returns 0 if authenticated
+            if result.returncode == 0:
+                self._auth_method = 'cli'
+                logger.info("GitLab authentication configured", extra={"context": {"method": "glab_cli", "mode": "interactive"}})
+                return
+        except FileNotFoundError:
+            raise RuntimeError(
+                "GitLab CLI (glab) is not installed. "
+                "Please install it from https://gitlab.com/gitlab-org/cli"
+            )
 
-        # Priority 2: Assume already authenticated locally
-        else:
-            logger.info("Using existing glab authentication", extra={"context": {"mode": "local"}})
+        # Neither authentication method available
+        raise RuntimeError(
+            "No GitLab authentication available. Please either:\n"
+            "  - Set GITLAB_TOKEN environment variable (for CI/CD), or\n"
+            "  - Run 'glab auth login' (for local development)"
+        )
 
