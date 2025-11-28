@@ -41,19 +41,26 @@ def strip_markdown_wrapper(text: str) -> str:
     # Strip leading/trailing whitespace to normalize
     text = text.strip()
 
-    # Pattern 1: Full wrapper with closing ```
-    # Matches: ```markdown or ``` at start, and ``` at end (with flexible whitespace)
-    pattern_full = r'^```(?:markdown|md)?\s*\n(.*?)(?:\n```\s*)?$'
+    # Check for complete markdown wrapper:
+    # - Must start with ```markdown or ```md or ``` followed by newline
+    # - Must end with ``` (possibly followed by whitespace)
+    # Only strip if we have BOTH opening and closing backticks
+    if not re.match(r'^```(?:markdown|md)?\s*\n', text):
+        return text
 
-    # Check if text starts with markdown code block opener
-    if re.match(r'^```(?:markdown|md)?\s*\n', text):
-        match = re.match(pattern_full, text, re.DOTALL)
-        if match:
-            content = match.group(1)
-            # Remove trailing ``` if present at end of content
-            content = re.sub(r'\n?```\s*$', '', content)
-            # Recursively check for more wrappers
-            return strip_markdown_wrapper(content.strip())
+    if not re.search(r'\n```\s*$', text):
+        return text
 
-    # No wrapper found, return as-is
+    # We have a complete wrapper - extract content between them
+    # Use a greedy match for content to capture everything between
+    # the opening and the LAST closing ```
+    pattern = r'^```(?:markdown|md)?\s*\n(.*)\n```\s*$'
+    match = re.match(pattern, text, re.DOTALL)
+    if match:
+        content = match.group(1)
+        # Only strip the outermost wrapper - do not recurse
+        # to avoid stripping legitimate internal code blocks
+        return content.strip()
+
+    # No valid wrapper found, return as-is
     return text
