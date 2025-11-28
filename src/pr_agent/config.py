@@ -30,6 +30,37 @@ def setup_environment(load_env_file: bool = True) -> None:
     os.environ.setdefault("OTEL_INSTRUMENTATION_GENAI_CAPTURE_MESSAGE_CONTENT", "true")
     os.environ.setdefault("GOOGLE_GENAI_USE_VERTEXAI", "TRUE")
 
+    missing_vars = []
+
+    # Validate Google Cloud environment variables
+    if not os.getenv("GOOGLE_CLOUD_PROJECT"):
+        missing_vars.append("GOOGLE_CLOUD_PROJECT")
+
+    if not os.getenv("GOOGLE_CLOUD_LOCATION"):
+        missing_vars.append("GOOGLE_CLOUD_LOCATION")
+
+    if not os.getenv("GOOGLE_CLOUD_AGENT_ENGINE_ENABLE_TELEMETRY"):
+        os.environ["GOOGLE_CLOUD_AGENT_ENGINE_ENABLE_TELEMETRY"] = "true"
+
+    if not os.getenv("OTEL_INSTRUMENTATION_GENAI_CAPTURE_MESSAGE_CONTENT"):
+        os.environ["OTEL_INSTRUMENTATION_GENAI_CAPTURE_MESSAGE_CONTENT"] = "true"
+
+    # Validate generic environment variables
+    if not os.getenv("REPOSITORY"):
+        missing_vars.append("REPOSITORY (or platform-specific equivalent)")
+    if not os.getenv("PR_NUMBER"):
+        missing_vars.append("PR_NUMBER (or platform-specific equivalent)")
+
+    # Report all missing variables
+    if missing_vars:
+        logger.error(
+            "Missing required environment variables",
+            extra={"context": {"missing_vars": missing_vars}},
+        )
+        raise EnvironmentError(f"Missing required environment variables: {', '.join(missing_vars)}")
+
+    logger.info("Environment variables validated successfully")
+
 
 def setup_google_cloud_auth() -> None:
     """Set up Google Cloud authentication from environment.

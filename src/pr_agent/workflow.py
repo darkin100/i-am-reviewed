@@ -6,12 +6,11 @@ import os
 import subprocess
 import sys
 
-from dotenv import load_dotenv
 from google.adk.agents import LlmAgent
 from google.adk.runners import InMemoryRunner
 from google.genai import types
 
-from pr_agent.config import setup_google_cloud_auth
+from pr_agent.config import setup_envirionment, setup_google_cloud_auth
 from pr_agent.logging_config import get_logger, setup_logging
 from pr_agent.platforms import get_platform
 from pr_agent.tools import get_pr_diff, get_pr_info
@@ -58,53 +57,6 @@ def get_pr_number() -> int:
             extra={"context": {"received_value": pr_number_str}},
         )
         sys.exit(1)
-
-
-def ValidateEnvironmentVariables(platform=None):
-    """Validate all required environment variables.
-
-    Validates generic environment variables required by all platforms,
-    and delegates platform-specific validation to the platform instance.
-
-    Args:
-        platform: Platform instance to validate platform-specific variables (optional)
-
-    Raises:
-        SystemExit: If any required environment variables are missing
-    """
-    missing_vars = []
-
-    # Validate Google Cloud environment variables
-    if not os.getenv("GOOGLE_CLOUD_PROJECT"):
-        missing_vars.append("GOOGLE_CLOUD_PROJECT")
-
-    if not os.getenv("GOOGLE_CLOUD_LOCATION"):
-        missing_vars.append("GOOGLE_CLOUD_LOCATION")
-
-    if not os.getenv("GOOGLE_CLOUD_AGENT_ENGINE_ENABLE_TELEMETRY"):
-        os.environ["GOOGLE_CLOUD_AGENT_ENGINE_ENABLE_TELEMETRY"] = "true"
-
-    if not os.getenv("OTEL_INSTRUMENTATION_GENAI_CAPTURE_MESSAGE_CONTENT"):
-        os.environ["OTEL_INSTRUMENTATION_GENAI_CAPTURE_MESSAGE_CONTENT"] = "true"
-
-    # Enable Vertex AI backend for ADK
-    os.environ["GOOGLE_GENAI_USE_VERTEXAI"] = "TRUE"
-
-    # Validate generic environment variables
-    if not os.getenv("REPOSITORY"):
-        missing_vars.append("REPOSITORY (or platform-specific equivalent)")
-    if not os.getenv("PR_NUMBER"):
-        missing_vars.append("PR_NUMBER (or platform-specific equivalent)")
-
-    # Report all missing variables
-    if missing_vars:
-        logger.error(
-            "Missing required environment variables",
-            extra={"context": {"missing_vars": missing_vars}},
-        )
-        sys.exit(1)
-
-    logger.info("Environment variables validated successfully")
 
 
 def parse_arguments():
@@ -231,11 +183,8 @@ def workflow():
             logger.error(f"Platform initialization failed: {e}")
             sys.exit(1)
 
-        # Load environment variables (only needed for local development)
-        load_dotenv()
-
         # Validate environment variables (generic + platform-specific)
-        ValidateEnvironmentVariables(platform)
+        setup_envirionment()
 
         # Set up Google Cloud authentication
         setup_google_cloud_auth()
