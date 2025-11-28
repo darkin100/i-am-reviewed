@@ -1,7 +1,7 @@
 """Abstract base class for Git hosting platform integrations."""
 
 from abc import ABC, abstractmethod
-from typing import Dict, Optional, List
+from typing import Dict
 
 
 class GitPlatform(ABC):
@@ -82,4 +82,4 @@ class GitPlatform(ABC):
         Returns:
             Platform name (e.g., 'GitHub', 'GitLab')
         """
-        return self.__class__.__name__.replace('Platform', '')
+        return self.__class__.__name__.replace("Platform", "")

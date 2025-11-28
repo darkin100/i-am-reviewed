@@ -40,6 +40,10 @@ dev = [
     "pytest>=9.0.0",
     "pytest-asyncio>=0.23.0",
     "ruff>=0.4.0",
+    "flake8>=7.0.0",
+    "black>=24.0.0",
+    "isort>=5.13.0",
+    "pre-commit>=3.6.0",
 ]
 
 [project.scripts]
@@ -79,3 +83,24 @@ ignore = [
 
 [tool.ruff.lint.isort]
 known-first-party = ["pr_agent", "adk_agents"]
+
+[tool.black]
+line-length = 100
+target-version = ["py310", "py311", "py312", "py313"]
+include = '\.pyi?$'
+extend-exclude = '''
+/(
+    \.git
+    | \.venv
+    | venv
+    | build
+    | dist
+)/
+'''
+
+[tool.isort]
+profile = "black"
+line_length = 100
+known_first_party = ["pr_agent", "adk_agents"]
+skip = [".git", ".venv", "venv", "build", "dist"]
+src_paths = ["src", "tests"]

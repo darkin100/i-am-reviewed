@@ -41,19 +41,21 @@ def setup_google_cloud_auth() -> None:
     For local development, this function does nothing and relies on
     default application credentials (gcloud auth application-default login).
     """
-    credentials_json = os.getenv('GOOGLE_CLOUD_CREDENTIALS')
+    credentials_json = os.getenv("GOOGLE_CLOUD_CREDENTIALS")
     if not credentials_json:
         logger.warning("No GOOGLE_CLOUD_CREDENTIALS found, using default credentials")
         return
 
     try:
-        fd, credentials_path = tempfile.mkstemp(suffix='.json', text=True)
-        with os.fdopen(fd, 'w') as f:
+        fd, credentials_path = tempfile.mkstemp(suffix=".json", text=True)
+        with os.fdopen(fd, "w") as f:
             f.write(credentials_json)
-        os.environ['GOOGLE_APPLICATION_CREDENTIALS'] = credentials_path
-        logger.info("Google Cloud credentials configured",
-                    extra={"context": {"credentials_path": credentials_path}})
-    except Exception as e:
+        os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = credentials_path
+        logger.info(
+            "Google Cloud credentials configured",
+            extra={"context": {"credentials_path": credentials_path}},
+        )
+    except Exception:
         logger.error("Error setting up credentials", exc_info=True)
         raise
 

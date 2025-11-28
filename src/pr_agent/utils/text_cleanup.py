@@ -45,16 +45,16 @@ def strip_markdown_wrapper(text: str) -> str:
     # - Must start with ```markdown or ```md or ``` followed by newline
     # - Must end with ``` (possibly followed by whitespace)
     # Only strip if we have BOTH opening and closing backticks
-    if not re.match(r'^```(?:markdown|md)?\s*\n', text):
+    if not re.match(r"^```(?:markdown|md)?\s*\n", text):
         return text
 
-    if not re.search(r'\n```\s*$', text):
+    if not re.search(r"\n```\s*$", text):
         return text
 
     # We have a complete wrapper - extract content between them
     # Use a greedy match for content to capture everything between
     # the opening and the LAST closing ```
-    pattern = r'^```(?:markdown|md)?\s*\n(.*)\n```\s*$'
+    pattern = r"^```(?:markdown|md)?\s*\n(.*)\n```\s*$"
     match = re.match(pattern, text, re.DOTALL)
     if match:
         content = match.group(1)

@@ -1,6 +1,5 @@
 """Tests for text cleanup utilities."""
 
-import pytest
 from pr_agent.utils.text_cleanup import strip_markdown_wrapper
 
 
@@ -55,7 +54,9 @@ Overall looks good!"""
         """Test that internal code blocks are NOT stripped (only outermost wrapper)."""
         # This tests the fix for the recursive stripping bug
         # Inner markdown block should be preserved as legitimate content
-        input_text = "```markdown\nHere's a template:\n\n```markdown\n## Heading\n```\n\nUse it wisely.\n```"
+        input_text = (
+            "```markdown\nHere's a template:\n\n```markdown\n## Heading\n```\n\nUse it wisely.\n```"
+        )
         expected = "Here's a template:\n\n```markdown\n## Heading\n```\n\nUse it wisely."
         assert strip_markdown_wrapper(input_text) == expected
 

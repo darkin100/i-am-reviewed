@@ -3,7 +3,7 @@
 import json
 import os
 import subprocess
-from typing import Dict, List, Optional
+from typing import Dict, Optional
 
 from pr_agent.logging_config import get_logger
 from pr_agent.platforms.base import GitPlatform
@@ -37,8 +37,8 @@ class GitLabPlatform(GitPlatform):
         env = os.environ.copy()
 
         # Add GITLAB_TOKEN if using token-based auth
-        if self._auth_method == 'token' and self._gitlab_token:
-            env['GITLAB_TOKEN'] = self._gitlab_token
+        if self._auth_method == "token" and self._gitlab_token:
+            env["GITLAB_TOKEN"] = self._gitlab_token
 
         return env
 
@@ -61,18 +61,10 @@ class GitLabPlatform(GitPlatform):
         Raises:
             subprocess.CalledProcessError: If the glab command fails
         """
-        cmd = [
-            'glab', 'mr', 'view', str(pr_number),
-            '-R', repo,
-            '-F', 'json'
-        ]
+        cmd = ["glab", "mr", "view", str(pr_number), "-R", repo, "-F", "json"]
 
         result = subprocess.run(
-            cmd,
-            capture_output=True,
-            text=True,
-            check=True,
-            env=self._get_subprocess_env()
+            cmd, capture_output=True, text=True, check=True, env=self._get_subprocess_env()
         )
 
         # Parse GitLab MR data and normalize to GitHub-compatible format
@@ -80,13 +72,11 @@ class GitLabPlatform(GitPlatform):
 
         # Normalize the structure to match GitHub's format
         return {
-            'title': mr_data.get('title', ''),
-            'body': mr_data.get('description', ''),
-            'author': {
-                'login': mr_data.get('author', {}).get('username', '')
-            },
-            'headRefName': mr_data.get('source_branch', ''),
-            'baseRefName': mr_data.get('target_branch', '')
+            "title": mr_data.get("title", ""),
+            "body": mr_data.get("description", ""),
+            "author": {"login": mr_data.get("author", {}).get("username", "")},
+            "headRefName": mr_data.get("source_branch", ""),
+            "baseRefName": mr_data.get("target_branch", ""),
         }
 
     @traced("gitlab.get_pr_diff")
@@ -103,17 +93,10 @@ class GitLabPlatform(GitPlatform):
         Raises:
             subprocess.CalledProcessError: If the glab command fails
         """
-        cmd = [
-            'glab', 'mr', 'diff', str(pr_number),
-            '-R', repo
-        ]
+        cmd = ["glab", "mr", "diff", str(pr_number), "-R", repo]
 
         result = subprocess.run(
-            cmd,
-            capture_output=True,
-            text=True,
-            check=True,
-            env=self._get_subprocess_env()
+            cmd, capture_output=True, text=True, check=True, env=self._get_subprocess_env()
         )
 
         return result.stdout
@@ -130,18 +113,10 @@ class GitLabPlatform(GitPlatform):
         Raises:
             subprocess.CalledProcessError: If the glab command fails
         """
-        cmd = [
-            'glab', 'mr', 'note', str(pr_number),
-            '-R', repo,
-            '--message', body
-        ]
+        cmd = ["glab", "mr", "note", str(pr_number), "-R", repo, "--message", body]
 
         subprocess.run(
-            cmd,
-            capture_output=True,
-            text=True,
-            check=True,
-            env=self._get_subprocess_env()
+            cmd, capture_output=True, text=True, check=True, env=self._get_subprocess_env()
         )
 
     def setup_auth(self) -> None:
@@ -158,28 +133,31 @@ class GitLabPlatform(GitPlatform):
             RuntimeError: If neither authentication method is available
         """
         # Check if GITLAB_TOKEN is available (CI mode)
-        gitlab_token = os.getenv('GITLAB_TOKEN')
+        gitlab_token = os.getenv("GITLAB_TOKEN")
 
         if gitlab_token:
             self._gitlab_token = gitlab_token
-            self._auth_method = 'token'
-            ci_server_host = os.getenv('CI_SERVER_HOST', 'gitlab.com')
-            logger.info("GitLab authentication configured", extra={"context": {"method": "GITLAB_TOKEN", "mode": "CI", "host": ci_server_host}})
+            self._auth_method = "token"
+            ci_server_host = os.getenv("CI_SERVER_HOST", "gitlab.com")
+            logger.info(
+                "GitLab authentication configured",
+                extra={"context": {"method": "GITLAB_TOKEN", "mode": "CI", "host": ci_server_host}},
+            )
             return
 
         # Check if glab CLI is authenticated (local mode)
         try:
             result = subprocess.run(
-                ['glab', 'auth', 'status'],
-                capture_output=True,
-                text=True,
-                check=False
+                ["glab", "auth", "status"], capture_output=True, text=True, check=False
             )
 
             # glab auth status returns 0 if authenticated
             if result.returncode == 0:
-                self._auth_method = 'cli'
-                logger.info("GitLab authentication configured", extra={"context": {"method": "glab_cli", "mode": "interactive"}})
+                self._auth_method = "cli"
+                logger.info(
+                    "GitLab authentication configured",
+                    extra={"context": {"method": "glab_cli", "mode": "interactive"}},
+                )
                 return
         except FileNotFoundError:
             raise RuntimeError(
@@ -193,4 +171,3 @@ class GitLabPlatform(GitPlatform):
             "  - Set GITLAB_TOKEN environment variable (for CI/CD), or\n"
             "  - Run 'glab auth login' (for local development)"
         )
-

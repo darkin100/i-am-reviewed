@@ -4,10 +4,10 @@ These tools wrap the platform classes to provide PR/MR data fetching
 capabilities for the interactive ADK dev UI.
 """
 
-from typing import Dict, Optional
+from typing import Dict
 
-from pr_agent.platforms import get_platform, GitPlatform
 from pr_agent.logging_config import get_logger
+from pr_agent.platforms import GitPlatform, get_platform
 
 logger = get_logger(__name__)
 
@@ -66,7 +66,7 @@ def get_pr_info(platform: str, repo: str, pr_number: int) -> Dict:
             "platform": platform,
             "repository": repo,
             "pr_number": pr_number,
-            **pr_data
+            **pr_data,
         }
     except ValueError as e:
         logger.error(f"Invalid platform: {e}")
@@ -75,7 +75,7 @@ def get_pr_info(platform: str, repo: str, pr_number: int) -> Dict:
             "error": f"Invalid platform '{platform}'. Use 'github' or 'gitlab'.",
             "platform": platform,
             "repository": repo,
-            "pr_number": pr_number
+            "pr_number": pr_number,
         }
     except RuntimeError as e:
         logger.error(f"Authentication failed: {e}")
@@ -84,7 +84,7 @@ def get_pr_info(platform: str, repo: str, pr_number: int) -> Dict:
             "error": str(e),
             "platform": platform,
             "repository": repo,
-            "pr_number": pr_number
+            "pr_number": pr_number,
         }
     except Exception as e:
         logger.error(f"Failed to fetch PR info: {e}")
@@ -93,7 +93,7 @@ def get_pr_info(platform: str, repo: str, pr_number: int) -> Dict:
             "error": str(e),
             "platform": platform,
             "repository": repo,
-            "pr_number": pr_number
+            "pr_number": pr_number,
         }
 
 
@@ -125,7 +125,7 @@ def get_pr_diff(platform: str, repo: str, pr_number: int) -> Dict:
             "repository": repo,
             "pr_number": pr_number,
             "diff": diff,
-            "diff_length": len(diff)
+            "diff_length": len(diff),
         }
     except ValueError as e:
         logger.error(f"Invalid platform: {e}")
@@ -134,7 +134,7 @@ def get_pr_diff(platform: str, repo: str, pr_number: int) -> Dict:
             "error": f"Invalid platform '{platform}'. Use 'github' or 'gitlab'.",
             "platform": platform,
             "repository": repo,
-            "pr_number": pr_number
+            "pr_number": pr_number,
         }
     except RuntimeError as e:
         logger.error(f"Authentication failed: {e}")
@@ -143,7 +143,7 @@ def get_pr_diff(platform: str, repo: str, pr_number: int) -> Dict:
             "error": str(e),
             "platform": platform,
             "repository": repo,
-            "pr_number": pr_number
+            "pr_number": pr_number,
         }
     except Exception as e:
         logger.error(f"Failed to fetch PR diff: {e}")
@@ -152,5 +152,5 @@ def get_pr_diff(platform: str, repo: str, pr_number: int) -> Dict:
             "error": str(e),
             "platform": platform,
             "repository": repo,
-            "pr_number": pr_number
+            "pr_number": pr_number,
         }

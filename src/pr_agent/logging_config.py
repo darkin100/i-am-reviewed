@@ -33,11 +33,11 @@ class JsonFormatter(logging.Formatter):
         span = trace.get_current_span()
         if span and span.is_recording():
             ctx = span.get_span_context()
-            log_entry["trace_id"] = format(ctx.trace_id, '032x')
-            log_entry["span_id"] = format(ctx.span_id, '016x')
+            log_entry["trace_id"] = format(ctx.trace_id, "032x")
+            log_entry["span_id"] = format(ctx.span_id, "016x")
 
         # Add context if provided via extra parameter
-        if hasattr(record, 'context') and record.context:
+        if hasattr(record, "context") and record.context:
             log_entry["context"] = record.context
 
         # Add exception info if present
@@ -56,11 +56,11 @@ def setup_logging() -> None:
     This function should be called once at application startup,
     before any logging occurs.
     """
-    log_level_str = os.getenv('LOG_LEVEL', 'DEBUG').upper()
+    log_level_str = os.getenv("LOG_LEVEL", "DEBUG").upper()
     log_level = getattr(logging, log_level_str, logging.DEBUG)
 
     # Create root logger for pr_agent package
-    root_logger = logging.getLogger('pr_agent')
+    root_logger = logging.getLogger("pr_agent")
     root_logger.setLevel(log_level)
 
     # Remove any existing handlers to avoid duplicates

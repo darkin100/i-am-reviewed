@@ -10,8 +10,8 @@
 | CI_SERVER_HOST                 | Read       | src/pr_agent/main.py:233, src/pr_agent/platforms/gitlab.py:148 | Optional  | GitLab  hostname (default: gitlab.com) |
 | GITLAB_TOKEN                   | Read       | src/pr_agent/platforms/gitlab.py:146              | Yes      | GitLab PAT  (required for MR API)      |
 | GH_TOKEN                       | Read       | src/pr_agent/platforms/github.py:119-122          | Yes (GitHub) | GitHub Personal   Access Token for CLI authentication          |
-  
-  
+
+
 Notes:
   - *Required in practice - code expects these but currently doesn't have fallback logic fully
   implemented

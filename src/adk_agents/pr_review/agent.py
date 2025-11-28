@@ -7,17 +7,17 @@ Run from project root: adk web src/adk_agents
 import os
 import sys
 
+from dotenv import load_dotenv
+from google.adk.agents import LlmAgent
+from google.genai import types
+
 # Add the src directory to Python path so we can import from agent package
 # Path: src/adk_agents/pr_review/agent.py -> src/adk_agents/pr_review -> src/adk_agents -> src
 src_dir = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 if src_dir not in sys.path:
     sys.path.insert(0, src_dir)
 
-from dotenv import load_dotenv
-from google.adk.agents import LlmAgent
-from google.genai import types
-
-from pr_agent.tools import get_pr_info, get_pr_diff
+from pr_agent.tools import get_pr_diff, get_pr_info  # noqa: E402
 
 # Load environment variables for local development
 load_dotenv()
@@ -77,12 +77,10 @@ Keep feedback concise but thorough.
 
 # Create the root agent for ADK web
 root_agent = LlmAgent(
-    model='gemini-2.5-flash',
-    name='pr_review_agent',
-    description='An AI agent that reviews pull requests from GitHub and GitLab for code quality, bugs, and best practices.',
+    model="gemini-2.5-flash",
+    name="pr_review_agent",
+    description="An AI agent that reviews pull requests from GitHub and GitLab for code quality, bugs, and best practices.",
     instruction=INTERACTIVE_INSTRUCTION,
     tools=[get_pr_info, get_pr_diff],
-    generate_content_config=types.GenerateContentConfig(
-        temperature=0.7
-    )
+    generate_content_config=types.GenerateContentConfig(temperature=0.7),
 )

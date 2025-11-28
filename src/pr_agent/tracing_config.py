@@ -6,7 +6,7 @@ from typing import Any, Callable, Dict, Optional
 
 from opentelemetry import trace
 from opentelemetry.exporter.cloud_trace import CloudTraceSpanExporter
-from opentelemetry.sdk.resources import Resource, SERVICE_NAME
+from opentelemetry.sdk.resources import SERVICE_NAME, Resource
 from opentelemetry.sdk.trace import TracerProvider
 from opentelemetry.sdk.trace.export import BatchSpanProcessor, ConsoleSpanExporter
 
@@ -16,9 +16,7 @@ logger = get_logger(__name__)
 
 
 def setup_tracing(
-    project_id: str,
-    service_name: str = "pr-review-agent",
-    enable_cloud_trace: bool = True
+    project_id: str, service_name: str = "pr-review-agent", enable_cloud_trace: bool = True
 ) -> trace.Tracer:
     """Initialize OpenTelemetry tracing with Cloud Trace exporter.
 
@@ -39,14 +37,14 @@ def setup_tracing(
         provider.add_span_processor(BatchSpanProcessor(cloud_exporter))
         logger.info(
             "Cloud Trace tracing enabled",
-            extra={"context": {"project_id": project_id, "service_name": service_name}}
+            extra={"context": {"project_id": project_id, "service_name": service_name}},
         )
     else:
         # Console exporter for local debugging
         provider.add_span_processor(BatchSpanProcessor(ConsoleSpanExporter()))
         logger.info(
             "Console tracing enabled (Cloud Trace disabled)",
-            extra={"context": {"service_name": service_name}}
+            extra={"context": {"service_name": service_name}},
         )
 
     trace.set_tracer_provider(provider)
@@ -72,6 +70,7 @@ def traced(span_name: Optional[str] = None) -> Callable:
     Returns:
         Decorated function with tracing enabled
     """
+
     def decorator(func: Callable) -> Callable:
         @wraps(func)
         def wrapper(self, *args: Any, **kwargs: Any) -> Any:
@@ -80,7 +79,7 @@ def traced(span_name: Optional[str] = None) -> Callable:
 
             with tracer.start_as_current_span(name) as span:
                 # Add platform attribute if available
-                if hasattr(self, 'get_platform_name'):
+                if hasattr(self, "get_platform_name"):
                     span.set_attribute("platform", self.get_platform_name())
 
                 try:
@@ -91,7 +90,9 @@ def traced(span_name: Optional[str] = None) -> Callable:
                     span.set_status(trace.StatusCode.ERROR, str(e))
                     span.record_exception(e)
                     raise
+
         return wrapper
+
     return decorator
 
 

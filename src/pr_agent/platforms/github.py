@@ -4,7 +4,7 @@ import json
 import os
 import re
 import subprocess
-from typing import Dict, List, Optional
+from typing import Dict, Optional
 
 from pr_agent.logging_config import get_logger
 from pr_agent.platforms.base import GitPlatform
@@ -36,12 +36,12 @@ class GitHubPlatform(GitPlatform):
         """
         # Start with current environment
         env = os.environ.copy()
-        env['NO_COLOR'] = '1'
-        env['CLICOLOR'] = '0'
+        env["NO_COLOR"] = "1"
+        env["CLICOLOR"] = "0"
 
         # Add GH_TOKEN if using token-based auth
-        if self._auth_method == 'token' and self._gh_token:
-            env['GH_TOKEN'] = self._gh_token
+        if self._auth_method == "token" and self._gh_token:
+            env["GH_TOKEN"] = self._gh_token
 
         return env
 
@@ -60,21 +60,23 @@ class GitHubPlatform(GitPlatform):
             subprocess.CalledProcessError: If the gh command fails
         """
         cmd = [
-            'gh', '-R', repo, 'pr', 'view', str(pr_number),
-            '--json', 'title,body,author,headRefName,baseRefName'
+            "gh",
+            "-R",
+            repo,
+            "pr",
+            "view",
+            str(pr_number),
+            "--json",
+            "title,body,author,headRefName,baseRefName",
         ]
 
         result = subprocess.run(
-            cmd,
-            capture_output=True,
-            text=True,
-            check=True,
-            env=self._get_subprocess_env()
+            cmd, capture_output=True, text=True, check=True, env=self._get_subprocess_env()
         )
 
         # Strip ANSI escape sequences
-        ansi_escape = re.compile(r'\x1B(?:[@-Z\\-_]|\[[0-?]*[ -/]*[@-~])')
-        clean_output = ansi_escape.sub('', result.stdout)
+        ansi_escape = re.compile(r"\x1B(?:[@-Z\\-_]|\[[0-?]*[ -/]*[@-~])")
+        clean_output = ansi_escape.sub("", result.stdout)
 
         pr_data = json.loads(clean_output)
         logger.debug("PR metadata response", extra={"context": {"metadata": pr_data}})
@@ -95,14 +97,10 @@ class GitHubPlatform(GitPlatform):
         Raises:
             subprocess.CalledProcessError: If the gh command fails
         """
-        cmd = ['gh', '-R', repo, 'pr', 'diff', str(pr_number)]
+        cmd = ["gh", "-R", repo, "pr", "diff", str(pr_number)]
 
         result = subprocess.run(
-            cmd,
-            capture_output=True,
-            text=True,
-            check=True,
-            env=self._get_subprocess_env()
+            cmd, capture_output=True, text=True, check=True, env=self._get_subprocess_env()
         )
 
         return result.stdout
@@ -119,14 +117,10 @@ class GitHubPlatform(GitPlatform):
         Raises:
             subprocess.CalledProcessError: If the gh command fails
         """
-        cmd = ['gh', '-R', repo, 'pr', 'comment', str(pr_number), '--body', body]
+        cmd = ["gh", "-R", repo, "pr", "comment", str(pr_number), "--body", body]
 
         subprocess.run(
-            cmd,
-            capture_output=True,
-            text=True,
-            check=True,
-            env=self._get_subprocess_env()
+            cmd, capture_output=True, text=True, check=True, env=self._get_subprocess_env()
         )
 
     def setup_auth(self) -> None:
@@ -140,27 +134,30 @@ class GitHubPlatform(GitPlatform):
             RuntimeError: If neither authentication method is available
         """
         # Check if GH_TOKEN is available (CI mode)
-        gh_token = os.getenv('GH_TOKEN')
+        gh_token = os.getenv("GH_TOKEN")
 
         if gh_token:
             self._gh_token = gh_token
-            self._auth_method = 'token'
-            logger.info("GitHub authentication configured", extra={"context": {"method": "GH_TOKEN", "mode": "CI"}})
+            self._auth_method = "token"
+            logger.info(
+                "GitHub authentication configured",
+                extra={"context": {"method": "GH_TOKEN", "mode": "CI"}},
+            )
             return
 
         # Check if gh CLI is authenticated (local mode)
         try:
             result = subprocess.run(
-                ['gh', 'auth', 'status'],
-                capture_output=True,
-                text=True,
-                check=False
+                ["gh", "auth", "status"], capture_output=True, text=True, check=False
             )
 
             # gh auth status returns 0 if authenticated
             if result.returncode == 0:
-                self._auth_method = 'cli'
-                logger.info("GitHub authentication configured", extra={"context": {"method": "gh_cli", "mode": "interactive"}})
+                self._auth_method = "cli"
+                logger.info(
+                    "GitHub authentication configured",
+                    extra={"context": {"method": "gh_cli", "mode": "interactive"}},
+                )
                 return
         except FileNotFoundError:
             raise RuntimeError(
