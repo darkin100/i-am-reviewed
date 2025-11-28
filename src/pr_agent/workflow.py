@@ -24,12 +24,7 @@ logger = get_logger(__name__)
 
 def get_repository_identifier() -> str:
     """Get repository identifier from environment variables.
-
-    Tries generic REPOSITORY first, then falls back to platform-specific variables.
-
-    Returns:
-        Repository identifier (e.g., 'owner/repo' or 'group/project')
-
+        
     Raises:
         SystemExit: If repository identifier cannot be determined
     """
@@ -40,14 +35,7 @@ def get_repository_identifier() -> str:
 
 
 def get_pr_number() -> int:
-    """Get PR/MR number from environment variables or CI/CD context.
-
-    Tries generic PR_NUMBER first, then platform-specific variables,
-    and finally attempts to extract from CI/CD event context.
-
-    Args:
-        platform: Platform instance to use for event extraction
-        platform_name: Name of the platform ('github' or 'gitlab')
+    """Get PR/MR number from environment variables.
 
     Returns:
         PR/MR number
@@ -134,10 +122,10 @@ def parse_arguments():
         epilog="""
 Examples:
   # Review GitHub PR
-  python -m pr_agent.workflow --provider github
+  python -m agent.workflow --provider github
 
   # Review GitLab MR
-  python -m pr_agent.workflow --provider gitlab
+  python -m agent.workflow --provider gitlab
 
 Environment Variables:
   REPOSITORY
@@ -309,15 +297,6 @@ Provide your code review."""
             platform.post_pr_comment(repo, pr_number, review_text)
 
             logger.info("Review successfully posted", extra={"context": {"pr_number": pr_number}})
-
-            # Generate platform-specific URL
-            # TODO: Refactor this into the Gitlab/GitHub platform classes
-            if platform.get_platform_name() == 'github':
-                logger.info("Review URL", extra={"context": {"url": f"https://github.com/{repo}/pull/{pr_number}"}})
-            elif platform.get_platform_name() == 'gitlab':
-                # GitLab URL structure: https://gitlab.com/group/project/-/merge_requests/{iid}
-                gitlab_host = os.getenv('CI_SERVER_HOST', 'gitlab.com')
-                logger.info("Review URL", extra={"context": {"url": f"https://{gitlab_host}/{repo}/-/merge_requests/{pr_number}"}})
 
     except subprocess.CalledProcessError as e:
         logger.error("CLI command failed", extra={"context": {"error": str(e), "stdout": e.stdout, "stderr": e.stderr}}, exc_info=True)

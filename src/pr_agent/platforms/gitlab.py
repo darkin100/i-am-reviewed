@@ -128,6 +128,10 @@ class GitLabPlatform(GitPlatform):
         """
         # Get environment variables
         gitlab_token = os.getenv('GITLAB_TOKEN')
+
+        if not gitlab_token:
+            raise Exception('GITLAB_TOKEN is required for authentication with GitLab.')
+
         ci_server_host = os.getenv('CI_SERVER_HOST', 'gitlab.com')
 
         # Priority 1: Use GITLAB_TOKEN (Personal Access Token) if available
@@ -153,28 +157,3 @@ class GitLabPlatform(GitPlatform):
         else:
             logger.info("Using existing glab authentication", extra={"context": {"mode": "local"}})
 
-    def validate_environment_variables(self) -> List[str]:
-        """Validate GitLab-specific environment variables.
-
-        Returns:
-            List of missing environment variable names (empty list if all present)
-        """
-        missing_vars = []
-
-        repository = os.getenv('REPOSITORY')
-
-        if not repository:
-            missing_vars.append('REPOSITORY')
-
-        pr_number = os.getenv('PR_NUMBER')
-
-        if not pr_number:
-            missing_vars.append('PR_NUMBER')
-
-        gitlab_token = os.getenv('GITLAB_TOKEN')
-
-        if not gitlab_token:
-            missing_vars.append('GITLAB_TOKEN')
-
-
-        return missing_vars

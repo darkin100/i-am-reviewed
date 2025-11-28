@@ -174,16 +174,3 @@ class GitHubPlatform(GitPlatform):
             "  - Set GH_TOKEN environment variable (for CI/CD), or\n"
             "  - Run 'gh auth login' (for local development)"
         )
-
-    def validate_environment_variables(self) -> List[str]:
-        """Validate GitHub-specific environment variables.
-
-        Note: GH_TOKEN is optional. Authentication is validated by setup_auth() instead.
-        This method is kept for consistency with the base class but returns empty list.
-
-        Returns:
-            List of missing environment variable names (empty list for GitHub)
-        """
-        # No required environment variables for GitHub platform
-        # Authentication is handled by setup_auth() which checks both GH_TOKEN and gh CLI auth
-        return []
