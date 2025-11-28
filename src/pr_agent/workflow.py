@@ -24,38 +24,35 @@ logger = get_logger(__name__)
 
 def get_repository_identifier() -> str:
     """Get repository identifier from environment variables.
-        
-    Raises:
-        SystemExit: If repository identifier cannot be determined
+
+    Returns:
+        Repository identifier string (e.g., 'owner/repo')
+
+    Note:
+        Assumes REPOSITORY has been validated by ValidateEnvironmentVariables().
     """
-    # Try generic variable first
-    repo = os.getenv('REPOSITORY')
-    if repo:
-        return repo
+    return os.getenv('REPOSITORY')
 
 
 def get_pr_number() -> int:
     """Get PR/MR number from environment variables.
 
     Returns:
-        PR/MR number
+        PR/MR number as integer
 
     Raises:
-        SystemExit: If PR number cannot be determined
+        SystemExit: If PR_NUMBER is not a valid integer
+
+    Note:
+        Assumes PR_NUMBER presence has been validated by ValidateEnvironmentVariables().
+        Only validates the integer conversion here.
     """
-    # Try generic variable first
     pr_number_str = os.getenv('PR_NUMBER')
-
-
-    # Validate and convert to integer
-    if not pr_number_str:
-        logger.error("Could not determine PR/MR number from environment variables. Set PR_NUMBER")
-        sys.exit(1)
 
     try:
         return int(pr_number_str)
-    except ValueError:
-        logger.error("PR/MR number must be an integer", extra={"context": {"received_value": pr_number_str}})
+    except (ValueError, TypeError):
+        logger.error("PR/MR number must be a valid integer", extra={"context": {"received_value": pr_number_str}})
         sys.exit(1)
 
 
