@@ -96,12 +96,6 @@ def ValidateEnvironmentVariables(platform=None):
     if not os.getenv("PR_NUMBER"):
         missing_vars.append("PR_NUMBER (or platform-specific equivalent)")
 
-    # If platform is provided, validate platform-specific variables
-    if platform:
-        platform_missing = platform.validate_environment_variables()
-        if platform_missing:
-            missing_vars.extend(platform_missing)
-
     # Report all missing variables
     if missing_vars:
         logger.error(
