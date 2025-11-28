@@ -59,8 +59,8 @@ def setup_logging() -> None:
     log_level_str = os.getenv('LOG_LEVEL', 'DEBUG').upper()
     log_level = getattr(logging, log_level_str, logging.DEBUG)
 
-    # Create root logger for agent package
-    root_logger = logging.getLogger('agent')
+    # Create root logger for pr_agent package
+    root_logger = logging.getLogger('pr_agent')
     root_logger.setLevel(log_level)
 
     # Remove any existing handlers to avoid duplicates
@@ -81,7 +81,7 @@ def get_logger(name: str) -> logging.Logger:
     """Get a logger for the specified module.
 
     Args:
-        name: Module name (typically __name__, e.g., 'agent.main')
+        name: Module name (typically __name__, e.g., 'pr_agent.workflow')
 
     Returns:
         Configured logger instance
