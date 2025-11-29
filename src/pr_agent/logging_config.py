@@ -5,7 +5,7 @@ import logging
 import os
 import sys
 from datetime import datetime, timezone
-from typing import Any, Dict
+from typing import Any
 
 from opentelemetry import trace
 
@@ -22,7 +22,7 @@ class JsonFormatter(logging.Formatter):
         Returns:
             JSON-formatted string
         """
-        log_entry: Dict[str, Any] = {
+        log_entry: dict[str, Any] = {
             "timestamp": datetime.now(timezone.utc).isoformat(),
             "level": record.levelname,
             "logger": record.name,
@@ -37,8 +37,9 @@ class JsonFormatter(logging.Formatter):
             log_entry["span_id"] = format(ctx.span_id, "016x")
 
         # Add context if provided via extra parameter
-        if hasattr(record, "context") and record.context:
-            log_entry["context"] = record.context
+        context = getattr(record, "context", None)
+        if context:
+            log_entry["context"] = context
 
         # Add exception info if present
         if record.exc_info:

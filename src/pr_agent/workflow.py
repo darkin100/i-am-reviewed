@@ -31,7 +31,10 @@ def get_repository_identifier() -> str:
     Note:
         Assumes REPOSITORY has been validated by ValidateEnvironmentVariables().
     """
-    return os.getenv("REPOSITORY")
+    # REPOSITORY is validated by setup_environment() before this is called
+    repo = os.getenv("REPOSITORY")
+    assert repo is not None, "REPOSITORY must be set"
+    return repo
 
 
 def get_pr_number() -> int:
@@ -49,9 +52,13 @@ def get_pr_number() -> int:
     """
     pr_number_str = os.getenv("PR_NUMBER")
 
+    if pr_number_str is None:
+        logger.error("PR_NUMBER environment variable is not set")
+        sys.exit(1)
+
     try:
         return int(pr_number_str)
-    except (ValueError, TypeError):
+    except ValueError:
         logger.error(
             "PR/MR number must be a valid integer",
             extra={"context": {"received_value": pr_number_str}},
@@ -137,14 +144,14 @@ Keep feedback concise but thorough."""
     )
 
 
-async def run_review_agent(prompt: str) -> str:
+async def run_review_agent(prompt: str) -> str | None:
     """Run the PR review agent with the given prompt.
 
     Args:
         prompt: The PR details to review
 
     Returns:
-        The review text from the agent
+        The review text from the agent, or None if no response was generated
     """
     tracer = get_tracer()
     with tracer.start_as_current_span("llm_agent_execution") as span:
@@ -191,9 +198,9 @@ def workflow():
 
         # Initialize tracing
         enable_cloud_trace = os.getenv("ENABLE_CLOUD_TRACE", "true").lower() == "true"
-        tracer = setup_tracing(
-            project_id=os.getenv("GOOGLE_CLOUD_PROJECT"), enable_cloud_trace=enable_cloud_trace
-        )
+        project_id = os.getenv("GOOGLE_CLOUD_PROJECT")
+        assert project_id is not None, "GOOGLE_CLOUD_PROJECT must be set"
+        tracer = setup_tracing(project_id=project_id, enable_cloud_trace=enable_cloud_trace)
 
         # Set up platform authentication
         platform.setup_auth()

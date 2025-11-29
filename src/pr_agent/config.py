@@ -5,7 +5,6 @@ This module provides configuration utilities shared between CLI and ADK web mode
 
 import os
 import tempfile
-from typing import Optional
 
 from dotenv import load_dotenv
 
@@ -57,7 +56,7 @@ def setup_environment(load_env_file: bool = True) -> None:
             "Missing required environment variables",
             extra={"context": {"missing_vars": missing_vars}},
         )
-        raise EnvironmentError(f"Missing required environment variables: {', '.join(missing_vars)}")
+        raise OSError(f"Missing required environment variables: {', '.join(missing_vars)}")
 
     logger.info("Environment variables validated successfully")
 
@@ -91,7 +90,7 @@ def setup_google_cloud_auth() -> None:
         raise
 
 
-def get_required_env(name: str, default: Optional[str] = None) -> str:
+def get_required_env(name: str, default: str | None = None) -> str:
     """Get required environment variable or raise error.
 
     Args:

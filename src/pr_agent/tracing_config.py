@@ -1,8 +1,9 @@
 """Tracing configuration for the PR Review Agent using OpenTelemetry and Cloud Trace."""
 
+from collections.abc import Callable
 from contextlib import contextmanager
 from functools import wraps
-from typing import Any, Callable, Dict, Optional
+from typing import Any
 
 from opentelemetry import trace
 from opentelemetry.exporter.cloud_trace import CloudTraceSpanExporter
@@ -60,7 +61,7 @@ def get_tracer() -> trace.Tracer:
     return trace.get_tracer(__name__)
 
 
-def traced(span_name: Optional[str] = None) -> Callable:
+def traced(span_name: str | None = None) -> Callable:
     """Decorator to add tracing to methods.
 
     Args:
@@ -97,7 +98,7 @@ def traced(span_name: Optional[str] = None) -> Callable:
 
 
 @contextmanager
-def custom_span(name: str, attributes: Optional[Dict[str, Any]] = None):
+def custom_span(name: str, attributes: dict[str, Any] | None = None):
     """Context manager for creating custom spans anywhere in the code.
 
     Usage:

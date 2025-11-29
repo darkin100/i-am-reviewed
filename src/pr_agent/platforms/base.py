@@ -1,7 +1,6 @@
 """Abstract base class for Git hosting platform integrations."""
 
 from abc import ABC, abstractmethod
-from typing import Dict
 
 
 class GitPlatform(ABC):
@@ -12,7 +11,7 @@ class GitPlatform(ABC):
     """
 
     @abstractmethod
-    def get_pr_info(self, repo: str, pr_number: int) -> Dict:
+    def get_pr_info(self, repo: str, pr_number: int) -> dict:
         """Fetch pull/merge request metadata.
 
         Args:

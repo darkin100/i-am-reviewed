@@ -4,15 +4,13 @@ These tools wrap the platform classes to provide PR/MR data fetching
 capabilities for the interactive ADK dev UI.
 """
 
-from typing import Dict
-
 from pr_agent.logging_config import get_logger
 from pr_agent.platforms import GitPlatform, get_platform
 
 logger = get_logger(__name__)
 
 # Cached platform instances to avoid re-authentication on each tool call
-_platform_cache: Dict[str, GitPlatform] = {}
+_platform_cache: dict[str, GitPlatform] = {}
 
 
 def _get_or_create_platform(platform: str) -> GitPlatform:
@@ -36,7 +34,7 @@ def _get_or_create_platform(platform: str) -> GitPlatform:
     return _platform_cache[platform_lower]
 
 
-def get_pr_info(platform: str, repo: str, pr_number: int) -> Dict:
+def get_pr_info(platform: str, repo: str, pr_number: int) -> dict:
     """Fetch pull request or merge request metadata.
 
     Use this tool to retrieve information about a PR/MR including title,
@@ -97,7 +95,7 @@ def get_pr_info(platform: str, repo: str, pr_number: int) -> Dict:
         }
 
 
-def get_pr_diff(platform: str, repo: str, pr_number: int) -> Dict:
+def get_pr_diff(platform: str, repo: str, pr_number: int) -> dict:
     """Fetch the full diff for a pull request or merge request.
 
     Use this tool to retrieve the complete code changes in a PR/MR.

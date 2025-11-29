@@ -4,7 +4,6 @@ import json
 import os
 import re
 import subprocess
-from typing import Dict, Optional
 
 from pr_agent.logging_config import get_logger
 from pr_agent.platforms.base import GitPlatform
@@ -22,10 +21,10 @@ class GitHubPlatform(GitPlatform):
     def __init__(self):
         """Initialize GitHub platform with authentication state."""
         super().__init__()
-        self._gh_token: Optional[str] = None
-        self._auth_method: Optional[str] = None
+        self._gh_token: str | None = None
+        self._auth_method: str | None = None
 
-    def _get_subprocess_env(self) -> Dict[str, str]:
+    def _get_subprocess_env(self) -> dict[str, str]:
         """Get environment dict for subprocess calls.
 
         Returns environment variables to pass to subprocess, including GH_TOKEN
@@ -46,7 +45,7 @@ class GitHubPlatform(GitPlatform):
         return env
 
     @traced("github.get_pr_info")
-    def get_pr_info(self, repo: str, pr_number: int) -> Dict:
+    def get_pr_info(self, repo: str, pr_number: int) -> dict:
         """Fetch PR metadata using GitHub CLI.
 
         Args:
@@ -159,11 +158,11 @@ class GitHubPlatform(GitPlatform):
                     extra={"context": {"method": "gh_cli", "mode": "interactive"}},
                 )
                 return
-        except FileNotFoundError:
+        except FileNotFoundError as err:
             raise RuntimeError(
                 "GitHub CLI (gh) is not installed. "
                 "Please install it from https://cli.github.com/"
-            )
+            ) from err
 
         # Neither authentication method available
         raise RuntimeError(

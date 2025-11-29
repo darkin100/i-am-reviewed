@@ -3,7 +3,6 @@
 import json
 import os
 import subprocess
-from typing import Dict, Optional
 
 from pr_agent.logging_config import get_logger
 from pr_agent.platforms.base import GitPlatform
@@ -21,10 +20,10 @@ class GitLabPlatform(GitPlatform):
     def __init__(self):
         """Initialize GitLab platform with authentication state."""
         super().__init__()
-        self._gitlab_token: Optional[str] = None
-        self._auth_method: Optional[str] = None
+        self._gitlab_token: str | None = None
+        self._auth_method: str | None = None
 
-    def _get_subprocess_env(self) -> Dict[str, str]:
+    def _get_subprocess_env(self) -> dict[str, str]:
         """Get environment dict for subprocess calls.
 
         Returns environment variables to pass to subprocess, including GITLAB_TOKEN
@@ -43,7 +42,7 @@ class GitLabPlatform(GitPlatform):
         return env
 
     @traced("gitlab.get_pr_info")
-    def get_pr_info(self, repo: str, pr_number: int) -> Dict:
+    def get_pr_info(self, repo: str, pr_number: int) -> dict:
         """Fetch MR metadata using GitLab CLI.
 
         Args:
@@ -159,11 +158,11 @@ class GitLabPlatform(GitPlatform):
                     extra={"context": {"method": "glab_cli", "mode": "interactive"}},
                 )
                 return
-        except FileNotFoundError:
+        except FileNotFoundError as err:
             raise RuntimeError(
                 "GitLab CLI (glab) is not installed. "
                 "Please install it from https://gitlab.com/gitlab-org/cli"
-            )
+            ) from err
 
         # Neither authentication method available
         raise RuntimeError(

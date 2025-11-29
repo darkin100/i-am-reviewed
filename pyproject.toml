@@ -39,7 +39,8 @@ dependencies = [
 dev = [
     "pytest>=9.0.0",
     "pytest-asyncio>=0.23.0",
-    "ruff>=0.4.0",
+    "ruff>=0.8.0",
+    "pyright>=1.1.391",
     "flake8>=7.0.0",
     "black>=24.0.0",
     "isort>=5.13.0",
@@ -84,6 +85,10 @@ ignore = [
 [tool.ruff.lint.isort]
 known-first-party = ["pr_agent", "adk_agents"]
 
+[tool.ruff.lint.per-file-ignores]
+# Notebooks often have imports after path manipulation, which is expected
+"*.ipynb" = ["E402"]
+
 [tool.black]
 line-length = 100
 target-version = ["py310", "py311", "py312", "py313"]
@@ -104,3 +109,12 @@ line_length = 100
 known_first_party = ["pr_agent", "adk_agents"]
 skip = [".git", ".venv", "venv", "build", "dist"]
 src_paths = ["src", "tests"]
+
+[tool.pyright]
+include = ["src", "tests"]
+exclude = ["**/__pycache__", ".venv", "venv", "build", "dist"]
+pythonVersion = "3.10"
+pythonPlatform = "All"
+typeCheckingMode = "standard"
+reportMissingImports = true
+reportMissingTypeStubs = false

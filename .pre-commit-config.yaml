@@ -23,3 +23,23 @@ repos:
     rev: 7.1.1
     hooks:
       - id: flake8
+
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: v0.8.4
+    hooks:
+      - id: ruff
+        args: [--fix, --exit-non-zero-on-fix]
+      - id: ruff-format
+
+  - repo: https://github.com/RobertCraigie/pyright-python
+    rev: v1.1.407
+    hooks:
+      - id: pyright
+        additional_dependencies:
+          - google-adk>=1.18.0
+          - google-cloud-aiplatform>=1.125.0
+          - opentelemetry-api>=1.20.0
+          - opentelemetry-sdk>=1.20.0
+          - opentelemetry-exporter-gcp-trace>=1.6.0
+          - python-dotenv>=1.0.0
+          - nest-asyncio>=1.5.0

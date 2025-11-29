@@ -66,7 +66,7 @@ Overall looks good!"""
 
     def test_none_input(self):
         """Test handling of None input."""
-        assert strip_markdown_wrapper(None) is None
+        assert strip_markdown_wrapper(None) is None  # type: ignore[arg-type]
 
     def test_whitespace_handling(self):
         """Test that leading/trailing whitespace is handled correctly."""
@@ -186,6 +186,6 @@ Please address the security issue before merging."""
 
     def test_non_string_input(self):
         """Test handling of non-string input types."""
-        assert strip_markdown_wrapper(123) == 123
-        assert strip_markdown_wrapper([]) == []
-        assert strip_markdown_wrapper({}) == {}
+        assert strip_markdown_wrapper(123) == 123  # type: ignore[arg-type]
+        assert strip_markdown_wrapper([]) == []  # type: ignore[arg-type]
+        assert strip_markdown_wrapper({}) == {}  # type: ignore[arg-type]
