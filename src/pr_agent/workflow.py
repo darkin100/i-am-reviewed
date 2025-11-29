@@ -10,7 +10,7 @@ from google.adk.agents import LlmAgent
 from google.adk.runners import InMemoryRunner
 from google.genai import types
 
-from pr_agent.config import setup_envirionment, setup_google_cloud_auth
+from pr_agent.config import setup_environment, setup_google_cloud_auth
 from pr_agent.logging_config import get_logger, setup_logging
 from pr_agent.platforms import get_platform
 from pr_agent.tools import get_pr_diff, get_pr_info
@@ -184,7 +184,7 @@ def workflow():
             sys.exit(1)
 
         # Validate environment variables (generic + platform-specific)
-        setup_envirionment()
+        setup_environment()
 
         # Set up Google Cloud authentication
         setup_google_cloud_auth()
