@@ -1,0 +1,83 @@
+# GitLab CI/CD Pipeline - Build and Push Docker Image
+#
+# This is an example GitLab CI/CD configuration that mirrors the GitHub Actions
+# workflow in .github/workflows/build-and-push.yml
+#
+# To use this file, copy it to .gitlab-ci.yml in your repository root.
+#
+# Required CI/CD Variables (Settings > CI/CD > Variables):
+#   - GOOGLE_CLOUD_PROJECT: Your GCP project ID
+#   - GOOGLE_CLOUD_CREDENTIALS: Service account JSON key (File type, masked)
+#
+# For Workload Identity Federation (more secure, recommended):
+#   - WORKLOAD_IDENTITY_PROVIDER: projects/<project-number>/locations/global/workloadIdentityPools/<pool>/providers/<provider>
+#   - SERVICE_ACCOUNT: your-service-account@your-project.iam.gserviceaccount.com
+
+stages:
+  - build
+
+variables:
+  REGISTRY: europe-west2-docker.pkg.dev/iamreleased/docker-images
+  DOCKER_BUILDKIT: "1"
+
+# Template for build jobs
+.build-template:
+  stage: build
+  image: google/cloud-sdk:slim
+  services:
+    - docker:24-dind
+  variables:
+    DOCKER_HOST: tcp://docker:2376
+    DOCKER_TLS_CERTDIR: "/certs"
+    DOCKER_CERT_PATH: "/certs/client"
+    DOCKER_TLS_VERIFY: "1"
+  before_script:
+    # Install Docker CLI
+    - apt-get update && apt-get install -y docker.io
+
+    # Authenticate to Google Cloud using Service Account Key
+    - echo "$GOOGLE_CLOUD_CREDENTIALS" | gcloud auth activate-service-account --key-file=-
+
+    # Configure Docker for Artifact Registry
+    - gcloud auth configure-docker europe-west2-docker.pkg.dev --quiet
+
+    # Set image tags
+    - export SHORT_SHA=$(echo $CI_COMMIT_SHA | cut -c1-7)
+    - export TAG_LATEST="${REGISTRY}/${IMAGE_NAME}:latest"
+    - export TAG_SHA="${REGISTRY}/${IMAGE_NAME}:${SHORT_SHA}"
+    - export TAG_FULL_SHA="${REGISTRY}/${IMAGE_NAME}:${CI_COMMIT_SHA}"
+  script:
+    - |
+      echo "Building ${IMAGE_NAME} from ${DOCKERFILE}..."
+      docker build \
+        --file ${DOCKERFILE} \
+        --tag ${TAG_LATEST} \
+        --tag ${TAG_SHA} \
+        --tag ${TAG_FULL_SHA} \
+        .
+    - |
+      echo "Pushing ${IMAGE_NAME}..."
+      docker push ${TAG_LATEST}
+      docker push ${TAG_SHA}
+      docker push ${TAG_FULL_SHA}
+    - |
+      echo "✅ ${PLATFORM} image pushed successfully!"
+      echo ""
+      echo "Image tags:"
+      echo "  Latest: ${TAG_LATEST}"
+      echo "  SHA: ${TAG_SHA}"
+      echo "  Full SHA: ${TAG_FULL_SHA}"
+  rules:
+    # Run on pushes to main branch
+    - if: $CI_COMMIT_BRANCH == "main"
+    # Allow manual trigger from any branch
+    - if: $CI_PIPELINE_SOURCE == "web"
+      when: manual
+
+# Build GitLab variant
+build-gitlab:
+  extends: .build-template
+  variables:
+    PLATFORM: gitlab
+    DOCKERFILE: Dockerfile.Gitlab
+    IMAGE_NAME: pr-review-agent-gitlab

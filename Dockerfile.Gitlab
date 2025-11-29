@@ -33,11 +33,11 @@ COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
 # Copy application code
-COPY agent/ ./agent/
+COPY src/ ./src/
 
 # Set Python path
 ENV PYTHONUNBUFFERED=1
-ENV PYTHONPATH=/app
+ENV PYTHONPATH=/app/src
 
 # Entry point with GitLab provider
-ENTRYPOINT ["python", "-m", "agent.main", "--provider", "gitlab"]
+ENTRYPOINT ["python", "-m", "pr_agent.workflow", "--provider", "gitlab"]

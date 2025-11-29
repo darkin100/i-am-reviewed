@@ -1,7 +1,7 @@
 """Abstract base class for Git hosting platform integrations."""
 
 from abc import ABC, abstractmethod
-from typing import Dict, Optional, List
+from typing import Dict
 
 
 class GitPlatform(ABC):
@@ -82,21 +82,4 @@ class GitPlatform(ABC):
         Returns:
             Platform name (e.g., 'GitHub', 'GitLab')
         """
-        return self.__class__.__name__.replace('Platform', '')
-
-    @abstractmethod
-    def validate_environment_variables(self) -> List[str]:
-        """Validate platform-specific environment variables.
-
-        Each platform should check for its required environment variables
-        and return a list of any that are missing.
-
-        The validation should check:
-        - Platform-specific repository identifier (if generic REPOSITORY not set)
-        - Platform-specific PR/MR number (if generic PR_NUMBER not set)
-        - Any other platform-specific required variables
-
-        Returns:
-            List of missing environment variable names (empty list if all present)
-        """
-        pass
+        return self.__class__.__name__.replace("Platform", "")
