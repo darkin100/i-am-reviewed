@@ -135,7 +135,7 @@ Format your reviews in clear markdown. Be constructive and actionable in your fe
 Keep feedback concise but thorough."""
 
     return LlmAgent(
-        model="gemini-2.5-flash",
+        model="gemini-2.5-flash-lite",
         name="pr_review_agent",
         description="An AI agent that reviews pull requests from GitHub and GitLab for code quality, bugs, and best practices.",
         instruction=system_instruction,
