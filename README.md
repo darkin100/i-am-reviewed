@@ -234,3 +234,5 @@ Review MR !15 in mygroup/myproject on GitLab
 | Debugging tool functionality | ADK Dev UI |
 | Reviewing a PR before posting | ADK Dev UI |
 | Manual one-off review with posting | Production Workflow |
+
+force build
