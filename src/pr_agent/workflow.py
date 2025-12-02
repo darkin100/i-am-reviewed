@@ -14,7 +14,7 @@ from google.genai import types
 from pr_agent.config import setup_environment, setup_google_cloud_auth
 from pr_agent.logging_config import setup_logging
 from pr_agent.platforms import get_platform
-from pr_agent.tools import get_pr_diff, get_pr_info
+from pr_agent.tools import PRTools
 from pr_agent.tracing_config import get_tracer, setup_tracing
 from pr_agent.utils import strip_markdown_wrapper
 
@@ -103,7 +103,7 @@ Environment Variables:
     return parser.parse_args()
 
 
-def create_review_agent() -> LlmAgent:
+def create_review_agent(tools: PRTools) -> LlmAgent:
     """Create and configure the PR review agent.
 
     Returns:
@@ -140,12 +140,12 @@ Keep feedback concise but thorough."""
         name="pr_review_agent",
         description="An AI agent that reviews pull requests from GitHub and GitLab for code quality, bugs, and best practices.",
         instruction=system_instruction,
-        tools=[get_pr_info, get_pr_diff],
+        tools=[tools.get_pr_info, tools.get_pr_diff],
         generate_content_config=types.GenerateContentConfig(temperature=0.7),
     )
 
 
-async def run_review_agent(prompt: str) -> str | None:
+async def run_review_agent(prompt: str, tools: PRTools) -> str | None:
     """Run the PR review agent with the given prompt.
 
     Args:
@@ -158,7 +158,7 @@ async def run_review_agent(prompt: str) -> str | None:
     with tracer.start_as_current_span("llm_agent_execution") as span:
         span.set_attribute("prompt_length", len(prompt))
 
-        agent = create_review_agent()
+        agent = create_review_agent(tools)
         runner = InMemoryRunner(agent=agent, app_name="pr_review")
 
         events = await runner.run_debug(prompt)
@@ -237,7 +237,9 @@ Provide your code review."""
             logger.info("Generating review with AI")
             logger.debug("LLM prompt", extra={"context": {"prompt": prompt}})
 
-            review_text = asyncio.run(run_review_agent(prompt))
+            tools = PRTools(platform)
+
+            review_text = asyncio.run(run_review_agent(prompt, tools))
 
             if not review_text:
                 logger.error("No response received from model")
