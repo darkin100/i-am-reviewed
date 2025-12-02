@@ -38,12 +38,6 @@ def setup_environment(load_env_file: bool = True) -> None:
     if not os.getenv("GOOGLE_CLOUD_LOCATION"):
         missing_vars.append("GOOGLE_CLOUD_LOCATION")
 
-    if not os.getenv("GOOGLE_CLOUD_AGENT_ENGINE_ENABLE_TELEMETRY"):
-        os.environ["GOOGLE_CLOUD_AGENT_ENGINE_ENABLE_TELEMETRY"] = "true"
-
-    if not os.getenv("OTEL_INSTRUMENTATION_GENAI_CAPTURE_MESSAGE_CONTENT"):
-        os.environ["OTEL_INSTRUMENTATION_GENAI_CAPTURE_MESSAGE_CONTENT"] = "true"
-
     # Validate generic environment variables
     if not os.getenv("REPOSITORY"):
         missing_vars.append("REPOSITORY (or platform-specific equivalent)")

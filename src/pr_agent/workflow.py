@@ -175,10 +175,13 @@ async def run_review_agent(prompt: str) -> str | None:
 
 
 def workflow():
-    """Run PR review workflow."""
+    logger.info("Initiating Workflow")
+
     try:
         # Parse command-line arguments
         args = parse_arguments()
+
+        logger.info("Arguments parsed", extra={"context": {"provider": args.provider}})
 
         # Get platform implementation
         try:
