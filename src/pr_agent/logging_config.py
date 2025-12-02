@@ -73,6 +73,3 @@ def setup_logging() -> None:
     handler.setFormatter(JsonFormatter())
 
     root_logger.addHandler(handler)
-
-    # Prevent propagation to root logger to avoid duplicate logs
-    root_logger.propagate = False
