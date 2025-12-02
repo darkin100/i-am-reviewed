@@ -2,6 +2,8 @@
 
 import json
 import logging
+import os
+import sys
 from datetime import datetime, timezone
 from typing import Any
 
@@ -46,43 +48,31 @@ class JsonFormatter(logging.Formatter):
         return json.dumps(log_entry, default=str)
 
 
-# def setup_logging() -> None:
-#     """Configure logging for the application.
+def setup_logging() -> None:
+    """Configure logging for the application.
 
-#     Reads LOG_LEVEL from environment variable (default: DEBUG).
-#     Configures JSON structured output to stderr.
+    Reads LOG_LEVEL from environment variable (default: DEBUG).
+    Configures JSON structured output to stderr.
 
-#     This function should be called once at application startup,
-#     before any logging occurs.
-#     """
-#     log_level_str = os.getenv("LOG_LEVEL", "DEBUG").upper()
-#     log_level = getattr(logging, log_level_str, logging.DEBUG)
-
-#     # Create root logger for pr_agent package
-#     root_logger = logging.getLogger("pr_agent")
-#     root_logger.setLevel(log_level)
-
-#     # Remove any existing handlers to avoid duplicates
-#     root_logger.handlers.clear()
-
-#     # Create stderr handler with JSON formatter
-#     handler = logging.StreamHandler(sys.stderr)
-#     handler.setLevel(log_level)
-#     handler.setFormatter(JsonFormatter())
-
-#     root_logger.addHandler(handler)
-
-#     # Prevent propagation to root logger to avoid duplicate logs
-#     root_logger.propagate = False
-
-
-def get_logger(name: str) -> logging.Logger:
-    """Get a logger for the specified module.
-
-    Args:
-        name: Module name (typically __name__, e.g., 'pr_agent.workflow')
-
-    Returns:
-        Configured logger instance
+    This function should be called once at application startup,
+    before any logging occurs.
     """
-    return logging.getLogger(name)
+    log_level_str = os.getenv("LOG_LEVEL", "DEBUG").upper()
+    log_level = getattr(logging, log_level_str, logging.DEBUG)
+
+    # Create root logger for pr_agent package
+    root_logger = logging.getLogger("pr_agent")
+    root_logger.setLevel(log_level)
+
+    # Remove any existing handlers to avoid duplicates
+    root_logger.handlers.clear()
+
+    # Create stderr handler with JSON formatter
+    handler = logging.StreamHandler(sys.stderr)
+    handler.setLevel(log_level)
+    handler.setFormatter(JsonFormatter())
+
+    root_logger.addHandler(handler)
+
+    # Prevent propagation to root logger to avoid duplicate logs
+    root_logger.propagate = False

@@ -2,6 +2,7 @@
 
 import argparse
 import asyncio
+import logging
 import os
 import subprocess
 import sys
@@ -11,15 +12,15 @@ from google.adk.runners import InMemoryRunner
 from google.genai import types
 
 from pr_agent.config import setup_environment, setup_google_cloud_auth
-from pr_agent.logging_config import get_logger
+from pr_agent.logging_config import setup_logging
 from pr_agent.platforms import get_platform
 from pr_agent.tools import get_pr_diff, get_pr_info
 from pr_agent.tracing_config import get_tracer, setup_tracing
 from pr_agent.utils import strip_markdown_wrapper
 
 # Initialize logging first
-# setup_logging()
-logger = get_logger(__name__)
+setup_logging()
+logger = logging.getLogger(__name__)
 
 
 def get_repository_identifier() -> str:
