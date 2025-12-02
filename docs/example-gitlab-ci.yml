@@ -21,6 +21,6 @@ build-job:
       -e "GOOGLE_CLOUD_PROJECT=$GOOGLE_CLOUD_PROJECT"
       -e "GOOGLE_CLOUD_LOCATION=$GOOGLE_CLOUD_LOCATION"
       -e "GOOGLE_CLOUD_CREDENTIALS=$GOOGLE_CLOUD_CREDENTIALS"
-      europe-west2-docker.pkg.dev/iamreleased/docker-images/pr-review-agent-gitlab:latest
+      europe-west2-docker.pkg.dev/iamreleased/docker-images/i-am-reviewed-gitlab:latest
   rules:
    - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
