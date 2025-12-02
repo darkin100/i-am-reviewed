@@ -20,7 +20,7 @@ from pr_agent.utils import strip_markdown_wrapper
 
 # Initialize logging first
 setup_logging()
-logger = logging.getLogger(__name__)
+logger = logging.getLogger("pr_agent.workflow")
 
 
 def get_repository_identifier() -> str:
