@@ -21,10 +21,10 @@ jobs:
         include:
           - platform: github
             dockerfile: Dockerfile.Github
-            image_name: pr-review-agent-github
+            image_name: i-am-reviewed-github
           - platform: gitlab
             dockerfile: Dockerfile.Gitlab
-            image_name: pr-review-agent-gitlab
+            image_name: i-am-reviewed-gitlab
 
     steps:
       - name: Checkout code

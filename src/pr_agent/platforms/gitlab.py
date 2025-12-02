@@ -1,14 +1,14 @@
 """GitLab platform implementation using GitLab CLI."""
 
 import json
+import logging
 import os
 import subprocess
 
-from pr_agent.logging_config import get_logger
 from pr_agent.platforms.base import GitPlatform
 from pr_agent.tracing_config import traced
 
-logger = get_logger(__name__)
+logger = logging.getLogger(__name__)
 
 
 class GitLabPlatform(GitPlatform):

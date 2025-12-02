@@ -3,14 +3,13 @@
 This module provides configuration utilities shared between CLI and ADK web modes.
 """
 
+import logging
 import os
 import tempfile
 
 from dotenv import load_dotenv
 
-from pr_agent.logging_config import get_logger
-
-logger = get_logger(__name__)
+logger = logging.getLogger(__name__)
 
 
 def setup_environment(load_env_file: bool = True) -> None:

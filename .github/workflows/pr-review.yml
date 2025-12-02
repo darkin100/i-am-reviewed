@@ -18,7 +18,7 @@ permissions:
 
 env:
   REGISTRY: europe-west2-docker.pkg.dev/iamreleased/docker-images
-  IMAGE_NAME: pr-review-agent-github
+  IMAGE_NAME: i-am-reviewed-github
 
 jobs:
   build-and-review:

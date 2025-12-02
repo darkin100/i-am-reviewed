@@ -4,10 +4,11 @@ These tools wrap the platform classes to provide PR/MR data fetching
 capabilities for the interactive ADK dev UI.
 """
 
-from pr_agent.logging_config import get_logger
+import logging
+
 from pr_agent.platforms import GitPlatform, get_platform
 
-logger = get_logger(__name__)
+logger = logging.getLogger(__name__)
 
 # Cached platform instances to avoid re-authentication on each tool call
 _platform_cache: dict[str, GitPlatform] = {}
