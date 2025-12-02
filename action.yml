@@ -29,7 +29,7 @@ inputs:
 
 runs:
   using: 'docker'
-  image: 'docker://europe-west2-docker.pkg.dev/iamreleased/docker-images/pr-review-agent-github:latest'
+  image: 'docker://europe-west2-docker.pkg.dev/iamreleased/docker-images/i-am-reviewed-github:latest'
   env:
     GH_TOKEN: ${{ inputs.github-token }}
     REPOSITORY: ${{ inputs.repository }}
