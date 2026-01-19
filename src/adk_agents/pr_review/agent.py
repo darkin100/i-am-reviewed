@@ -4,20 +4,11 @@ This module exposes the root_agent for use with `adk web`.
 Run from project root: adk web src/adk_agents
 """
 
-import os
-import sys
-
 from google.adk.agents import LlmAgent
 from google.genai import types
 
 from pr_agent.config import setup_environment
 from pr_agent.tools import get_pr_diff, get_pr_info
-
-# Add the src directory to Python path so we can import from agent package
-# Path: src/adk_agents/pr_review/agent.py -> src/adk_agents/pr_review -> src/adk_agents -> src
-src_dir = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-if src_dir not in sys.path:
-    sys.path.insert(0, src_dir)
 
 # Configure Vertex AI backend
 setup_environment()

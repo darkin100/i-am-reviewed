@@ -7,6 +7,7 @@ capabilities for the interactive ADK dev UI.
 import logging
 
 from pr_agent.platforms import GitPlatform
+from pr_agent.platforms import get_platform
 
 logger = logging.getLogger(__name__)
 
@@ -135,3 +136,38 @@ class PRTools:
                 "repository": repo,
                 "pr_number": pr_number,
             }
+
+
+
+
+                                                                                                                                                                                                                                   
+def get_pr_info(platform: str, repo: str, pr_number: int) -> dict:                                                                                                                                                               
+    """Fetch pull request or merge request metadata.                                                                                                                                                                             
+                                                                                                                                                                                                                                
+    Args:                                                                                                                                                                                                                        
+        platform: The git platform ('github' or 'gitlab')                                                                                                                                                                        
+        repo: Repository identifier (e.g., 'owner/repo')                                                                                                                                                                         
+        pr_number: The pull request or merge request number                                                                                                                                                                      
+                                                                                                                                                                                                                                
+    Returns:                                                                                                                                                                                                                     
+        Dictionary containing PR metadata                                                                                                                                                                                        
+    """                                                                                                                                                                                                                          
+    platform_instance = get_platform(platform)                                                                                                                                                                                   
+    tools = PRTools(platform_instance)                                                                                                                                                                                           
+    return tools.get_pr_info(repo, pr_number)                                                                                                                                                                                    
+                                                                                                                                                                                                                                
+                                                                                                                                                                                                                                
+def get_pr_diff(platform: str, repo: str, pr_number: int) -> dict:                                                                                                                                                               
+    """Fetch the full diff for a pull request or merge request.                                                                                                                                                                  
+                                                                                                                                                                                                                                
+    Args:                                                                                                                                                                                                                        
+        platform: The git platform ('github' or 'gitlab')                                                                                                                                                                        
+        repo: Repository identifier (e.g., 'owner/repo')                                                                                                                                                                         
+        pr_number: The pull request or merge request number                                                                                                                                                                      
+                                                                                                                                                                                                                                
+    Returns:                                                                                                                                                                                                                     
+        Dictionary containing the diff                                                                                                                                                                                           
+    """                                                                                                                                                                                                                          
+    platform_instance = get_platform(platform)                                                                                                                                                                                   
+    tools = PRTools(platform_instance)                                                                                                                                                                                           
+    return tools.get_pr_diff(repo, pr_number)  

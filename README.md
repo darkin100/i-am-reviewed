@@ -13,7 +13,9 @@ Supports both **GitHub** and **GitLab** through a platform-agnostic architecture
 1. **Python 3.11+** with virtual environment
 2. **Git hosting CLI** (choose based on your platform):
    - **GitHub CLI (`gh`)** - Install from https://cli.github.com/
+   - brew install gh
    - **GitLab CLI (`glab`)** - Install from https://gitlab.com/gitlab-org/cli
+   - brew install glab
 3. **Google Cloud SDK** - For Vertex AI authentication
 4. **Git platform authentication**:
    - GitHub: Run `gh auth login`
@@ -26,11 +28,17 @@ Supports both **GitHub** and **GitLab** through a platform-agnostic architecture
 git clone https://github.com/darkin100/i-am-reviewed.git
 cd i-am-reviewed
 
+#create virtual env
+
+python3 -m venv .venv
+
 # Activate virtual environment
 source venv/bin/activate
 
 # Install dependencies
 pip install -r requirements.txt
+pip install -e .               
+
 ```
 
 ### Configuration
