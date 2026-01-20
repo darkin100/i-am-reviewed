@@ -11,12 +11,12 @@ from google.adk.agents import LlmAgent
 from google.adk.runners import InMemoryRunner
 from google.genai import types
 
-from pr_agent.config import setup_environment, setup_google_cloud_auth
-from pr_agent.logging_config import setup_logging
-from pr_agent.platforms import get_platform
-from pr_agent.tools import PRTools
-from pr_agent.tracing_config import get_tracer, setup_tracing
-from pr_agent.utils import strip_markdown_wrapper
+from config import setup_environment, setup_google_cloud_auth
+from logging_config import setup_logging
+from platforms import get_platform
+from tools import PRTools
+from tracing_config import get_tracer, setup_tracing
+from utils import strip_markdown_wrapper
 
 # Initialize logging first
 setup_logging()

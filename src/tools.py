@@ -6,8 +6,8 @@ capabilities for the interactive ADK dev UI.
 
 import logging
 
-from pr_agent.platforms import GitPlatform
-from pr_agent.platforms import get_platform
+from platforms import GitPlatform
+from platforms import get_platform
 
 logger = logging.getLogger(__name__)
 
