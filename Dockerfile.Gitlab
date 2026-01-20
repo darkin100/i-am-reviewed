@@ -40,4 +40,4 @@ ENV PYTHONUNBUFFERED=1
 ENV PYTHONPATH=/app/src
 
 # Entry point with GitLab provider
-ENTRYPOINT ["python", "-m", "pr_agent.workflow", "--provider", "gitlab"]
+ENTRYPOINT ["python", "-m", "workflow", "--provider", "gitlab"]

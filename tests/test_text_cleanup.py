@@ -1,6 +1,6 @@
 """Tests for text cleanup utilities."""
 
-from pr_agent.utils.text_cleanup import strip_markdown_wrapper
+from utils.text_cleanup import strip_markdown_wrapper
 
 
 class TestStripMarkdownWrapper:

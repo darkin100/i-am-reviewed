@@ -45,10 +45,10 @@ pip install -e .
 
 1. **Copy the example environment file:**
    ```bash
-   cp src/pr_agent/.env.example src/pr_agent/.env
+   cp src/.env.example src/.env
    ```
 
-2. **Edit `src/pr_agent/.env` with your settings:**
+2. **Edit `src/.env` with your settings:**
 
    For **GitHub**:
    ```bash
@@ -95,10 +95,10 @@ pip install -e .
 source venv/bin/activate
 
 # Run for GitHub
-python -m pr_agent.workflow --provider github
+python -m workflow --provider github
 
 # Or run for GitLab
-python -m pr_agent.workflow --provider gitlab
+python -m workflow --provider gitlab
 ```
 
 ### Test with a Real PR/MR
@@ -113,7 +113,7 @@ python -m pr_agent.workflow --provider gitlab
    ```
 3. Run the agent:
    ```bash
-   python -m pr_agent.workflow --provider github
+   python -m workflow --provider github
    ```
 4. Check the PR for the review comment
 
@@ -127,7 +127,7 @@ python -m pr_agent.workflow --provider gitlab
    ```
 3. Run the agent:
    ```bash
-   python -m pr_agent.workflow --provider gitlab
+   python -m workflow --provider gitlab
    ```
 4. Check the MR for the review comment
 
@@ -145,9 +145,9 @@ View at: https://github.com/owner/repo/pull/123
 
 ## Architecture
 
-### Production Workflow (`pr_agent.workflow`)
+### Production Workflow (`workflow`)
 
-The main agent located in `src/pr_agent/workflow.py` is designed for CI/CD integration and automated reviews. It:
+The main agent located in `src/workflow.py` is designed for CI/CD integration and automated reviews. It:
 
 - Reads PR details from environment variables (`REPOSITORY`, `PR_NUMBER`)
 - Fetches PR metadata and diff using platform CLI tools
@@ -176,7 +176,7 @@ Use the ADK Dev UI for testing the agent's system prompt and reviewing PRs inter
 
 ### Setup
 
-1. **Ensure environment variables are configured** in `src/pr_agent/.env`:
+1. **Ensure environment variables are configured** in `src/.env`:
    ```bash
    GOOGLE_CLOUD_PROJECT=your-project-id
    GOOGLE_CLOUD_LOCATION=europe-west2

@@ -60,8 +60,8 @@ def setup_logging() -> None:
     log_level_str = os.getenv("LOG_LEVEL", "DEBUG").upper()
     log_level = getattr(logging, log_level_str, logging.DEBUG)
 
-    # Create root logger for pr_agent package
-    root_logger = logging.getLogger("pr_agent")
+    # Create root logger for PR review agent
+    root_logger = logging.getLogger()
     root_logger.setLevel(log_level)
 
     # Remove any existing handlers to avoid duplicates

@@ -20,7 +20,7 @@ from utils import strip_markdown_wrapper
 
 # Initialize logging first
 setup_logging()
-logger = logging.getLogger("pr_agent.workflow")
+logger = logging.getLogger("workflow")
 
 
 def get_repository_identifier() -> str:
@@ -79,10 +79,10 @@ def parse_arguments():
         epilog="""
 Examples:
   # Review GitHub PR
-  python -m agent.workflow --provider github
+  python -m workflow --provider github
 
   # Review GitLab MR
-  python -m agent.workflow --provider gitlab
+  python -m workflow --provider gitlab
 
 Environment Variables:
   REPOSITORY

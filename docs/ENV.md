@@ -2,14 +2,14 @@
 
 | Variable                       | Read/Write | Files                      | Required  | Purpose                           |
 |--------------------------------|------------|----------------------------|-----------|---------------------------------------|
-| GOOGLE_APPLICATION_CREDENTIALS | Read       | src/pr_agent/main.py:32                 | -         | Set by code  (temp file path)          |
-| GOOGLE_CLOUD_PROJECT           | Read       | src/pr_agent/main.py:185                | Yes       | GCP project ID                          |
-| GOOGLE_CLOUD_LOCATION          | Read       | src/pr_agent/main.py:186                | Yes       | GCP region                          |
-| REPOSITORY                     | Read       | src/pr_agent/main.py:51                 | Yes       | Generic repo  identifier               |
-| PR_NUMBER                      | Read       | src/pr_agent/main.py:73                 | Yes       | Generic PR/MR  number  ${{github.event.pull_request.number}} $CI_MERGE_REQUEST_IID                |
-| CI_SERVER_HOST                 | Read       | src/pr_agent/main.py:233, src/pr_agent/platforms/gitlab.py:148 | Optional  | GitLab  hostname (default: gitlab.com) |
-| GITLAB_TOKEN                   | Read       | src/pr_agent/platforms/gitlab.py:146              | Yes      | GitLab PAT  (required for MR API)      |
-| GH_TOKEN                       | Read       | src/pr_agent/platforms/github.py:119-122          | Yes (GitHub) | GitHub Personal   Access Token for CLI authentication          |
+| GOOGLE_APPLICATION_CREDENTIALS | Read       | src/config.py                 | -         | Set by code  (temp file path)          |
+| GOOGLE_CLOUD_PROJECT           | Read       | src/workflow.py, src/config.py                | Yes       | GCP project ID                          |
+| GOOGLE_CLOUD_LOCATION          | Read       | src/config.py                | Yes       | GCP region                          |
+| REPOSITORY                     | Read       | src/workflow.py                 | Yes       | Generic repo  identifier               |
+| PR_NUMBER                      | Read       | src/workflow.py                 | Yes       | Generic PR/MR  number  ${{github.event.pull_request.number}} $CI_MERGE_REQUEST_IID                |
+| CI_SERVER_HOST                 | Read       | src/platforms/gitlab.py | Optional  | GitLab  hostname (default: gitlab.com) |
+| GITLAB_TOKEN                   | Read       | src/platforms/gitlab.py              | Yes      | GitLab PAT  (required for MR API)      |
+| GH_TOKEN                       | Read       | src/platforms/github.py          | Yes (GitHub) | GitHub Personal   Access Token for CLI authentication          |
 
 
 Notes:

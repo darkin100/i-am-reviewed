@@ -42,4 +42,4 @@ ENV PYTHONUNBUFFERED=1
 ENV PYTHONPATH=/app/src
 
 # Entry point with GitHub provider
-ENTRYPOINT ["python", "-m", "pr_agent.workflow", "--provider", "github"]
+ENTRYPOINT ["python", "-m", "workflow", "--provider", "github"]

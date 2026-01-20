@@ -5,8 +5,8 @@ import logging
 import os
 import subprocess
 
-from pr_agent.platforms.base import GitPlatform
-from pr_agent.tracing_config import traced
+from platforms.base import GitPlatform
+from tracing_config import traced
 
 logger = logging.getLogger(__name__)
 

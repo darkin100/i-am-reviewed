@@ -48,7 +48,7 @@ dev = [
 ]
 
 [project.scripts]
-pr-review = "pr_agent.workflow:workflow"
+pr-review = "workflow:workflow"
 
 [project.urls]
 Homepage = "https://github.com/darkin100/pr-review-agent"
@@ -83,7 +83,7 @@ ignore = [
 ]
 
 [tool.ruff.lint.isort]
-known-first-party = ["pr_agent", "adk_agents"]
+known-first-party = ["adk_agents", "platforms", "utils", "config", "workflow", "tools", "tracing_config", "logging_config"]
 
 [tool.ruff.lint.per-file-ignores]
 # Notebooks often have imports after path manipulation, which is expected
@@ -106,7 +106,7 @@ extend-exclude = '''
 [tool.isort]
 profile = "black"
 line_length = 100
-known_first_party = ["pr_agent", "adk_agents"]
+known_first_party = ["adk_agents", "platforms", "utils", "config", "workflow", "tools", "tracing_config", "logging_config"]
 skip = [".git", ".venv", "venv", "build", "dist"]
 src_paths = ["src", "tests"]
 
