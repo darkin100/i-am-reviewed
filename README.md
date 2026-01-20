@@ -145,13 +145,6 @@ View at: https://github.com/owner/repo/pull/123
 
 ## Architecture
 
-The project has two modes of operation:
-
-| Mode | Entry Point | Purpose | Posts Comments |
-|------|-------------|---------|----------------|
-| **Production Workflow** | `python -m pr_agent.workflow` | Full automated PR review pipeline | Yes |
-| **ADK Dev UI** | `adk web src/adk_agents` | Interactive testing and prompt development | No (read-only) |
-
 ### Production Workflow (`pr_agent.workflow`)
 
 The main agent located in `src/pr_agent/workflow.py` is designed for CI/CD integration and automated reviews. It:
